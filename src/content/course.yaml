@@ -1,8 +1,0 @@
-title: book1
-structure:
-  - title: A1
-    items:
-      - title: Chapter 1
-        items:
-          - title: Basics
-            path: /a1/chapter-1/basics
