@@ -6,3 +6,5 @@ structure:
         items:
           - title: Basics
             path: /a1/chapter-1/basics
+          - title: Demo
+            path: /a1/chapter-1/demo
