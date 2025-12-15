@@ -1,2 +1,4 @@
 title: book1
-structure: []
+structure:
+  - title: A1
+    items: []
