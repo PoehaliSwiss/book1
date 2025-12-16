@@ -29,13 +29,16 @@ export default defineConfig(({ mode }) => {
       }),
       react()
     ],
-    server: {
-      proxy: {
-        '/api': {
-          target: 'http://localhost:5292',
-          changeOrigin: true,
-          secure: false
-        }
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5292',
+        changeOrigin: true,
+        secure: false
+      }
+    },
+    resolve: {
+      alias: {
+        'react-ga4': 'react-ga4/dist/index.js'
       }
     }
   };
