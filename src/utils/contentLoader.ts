@@ -9,6 +9,8 @@ export interface CourseItem {
 
 export interface CourseStructure {
     title: string;
+    description?: string; // Adding description as it might be useful too
+    googleAnalyticsId?: string;
     structure: CourseItem[];
 }
 

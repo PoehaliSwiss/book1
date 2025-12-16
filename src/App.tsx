@@ -8,6 +8,7 @@ import { SettingsProvider, useSettings } from './context/SettingsContext';
 import { ProgressProvider, useProgress } from './context/ProgressContext';
 import { NextLessonNavigation } from './components/NextLessonNavigation';
 import { SettingsModal } from './components/settings/SettingsModal';
+import { AnalyticsTracker } from './components/AnalyticsTracker';
 
 import exerciseCountsData from './exerciseCounts.json';
 import { ProgressBar } from './components/progress/ProgressBar';
@@ -352,6 +353,8 @@ function AppContent() {
                 <Helmet>
                     <title>{course.title}</title>
                 </Helmet>
+
+                <AnalyticsTracker courseGaId={course.googleAnalyticsId} />
 
                 {/* Mobile Header */}
                 <div className="md:hidden absolute top-0 left-0 right-0 h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center px-4 z-20">
