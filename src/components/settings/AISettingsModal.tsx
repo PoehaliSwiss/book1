@@ -169,6 +169,7 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
                                         else if (p === 'deepseek') { baseUrl = 'https://api.deepseek.com'; model = 'deepseek-chat'; }
                                         else if (p === 'qwen') { baseUrl = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'; model = 'qwen-plus'; }
                                         else if (p === 'gemini') { baseUrl = 'https://generativelanguage.googleapis.com'; model = 'gemini-1.5-flash'; }
+                                        else if (p === 'grok') { baseUrl = 'https://api.x.ai/v1'; model = 'grok-beta'; }
 
                                         setConfig({ ...config, provider: p, baseUrl, model });
                                     }}
@@ -179,6 +180,7 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
                                     <option value="deepseek">DeepSeek</option>
                                     <option value="qwen">Qwen (Alibaba)</option>
                                     <option value="gemini">Google Gemini</option>
+                                    <option value="grok">xAI (Grok)</option>
                                 </select>
                             </div>
 
