@@ -1,5 +1,4 @@
 import { defineConfig } from 'vite'
-import path from 'path';
 import react from '@vitejs/plugin-react'
 import mdx from '@mdx-js/rollup'
 import remarkGfm from 'remark-gfm';
@@ -35,11 +34,6 @@ export default defineConfig(({ mode }) => {
         target: 'http://localhost:5292',
         changeOrigin: true,
         secure: false
-      }
-    },
-    resolve: {
-      alias: {
-        'react-ga4': path.resolve(__dirname, 'node_modules/react-ga4/dist/index.js')
       }
     }
   };
