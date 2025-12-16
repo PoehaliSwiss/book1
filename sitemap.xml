@@ -20,12 +20,6 @@
     </url>
     
     <url>
-        <loc>https://www.kornei.de/a1/chapter-1/deutsch-lernen</loc>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    
-    <url>
         <loc>https://www.kornei.de/editor</loc>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
