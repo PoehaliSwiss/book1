@@ -14,3 +14,5 @@ structure:
             path: /a1/chapter-1/deutsch-lernen
           - title: Podcast C1
             path: /a1/chapter-1/podcast-c1
+          - title: Podcast 2
+            path: /a1/chapter-1/podcast-2
