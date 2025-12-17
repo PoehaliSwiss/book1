@@ -4,11 +4,11 @@ structure:
     items:
       - title: Chapter 1
         items:
-          - title: Deutsch lernen
-            path: /a1/chapter-1/deutsch-lernen
           - title: Basics
             path: /a1/chapter-1/basics
           - title: Demo
             path: /a1/chapter-1/demo
           - title: English tenses
             path: /a1/chapter-1/english-tenses
+          - title: Deutsch lernen
+            path: /a1/chapter-1/deutsch-lernen
