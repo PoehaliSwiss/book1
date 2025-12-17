@@ -2,6 +2,8 @@ title: book1
 structure:
   - title: A1
     items:
+      - title: Deutsch lernen
+        path: /a1/chapter-1/deutsch-lernen
       - title: Chapter 1
         items:
           - title: Basics
@@ -10,5 +12,3 @@ structure:
             path: /a1/chapter-1/demo
           - title: English tenses
             path: /a1/chapter-1/english-tenses
-      - title: Deutsch lernen
-        path: /a1/chapter-1/deutsch-lernen
