@@ -457,6 +457,17 @@ function AppContent() {
                                     <Route path="/table-test" element={<div />} /> {/* Dummy */}
                                     <Route path="/" element={<Navigate to={routes[0]?.path || '/'} replace />} />
                                 </Routes>
+
+                                <footer className="mt-16 py-8 text-center text-sm text-gray-400 dark:text-gray-600">
+                                    <a
+                                        href="https://akkem.study"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+                                    >
+                                        Made with akkem.study
+                                    </a>
+                                </footer>
                             </div>
                         </React.Suspense>
                     </div>

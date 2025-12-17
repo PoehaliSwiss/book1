@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 const COURSE_PATH = path.join(__dirname, '../src/content/course.yaml');
 const DIST_PATH = path.join(__dirname, '../dist');
-const BASE_URL = 'https://www.kornei.de';
+const BASE_URL = 'https://akkem.study';
 
 function loadCourse() {
     if (!fs.existsSync(COURSE_PATH)) {
