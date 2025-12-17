@@ -10,3 +10,5 @@ structure:
             path: /a1/chapter-1/demo
           - title: English tenses
             path: /a1/chapter-1/english-tenses
+          - title: Deutsch lernen
+            path: /a1/chapter-1/deutsch-lernen
