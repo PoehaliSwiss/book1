@@ -3,12 +3,13 @@ import { Loader2, AlertTriangle } from 'lucide-react';
 interface ConfirmationModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onConfirm: () => void;
+    onConfirm?: () => void; // Optional for alert
     title: string;
     message: string;
     confirmLabel?: string;
     cancelLabel?: string;
     isProcessing?: boolean;
+    variant?: 'confirm' | 'alert'; // New prop
 }
 
 export function ConfirmationModal({
@@ -20,6 +21,7 @@ export function ConfirmationModal({
     confirmLabel = 'Confirm',
     cancelLabel = 'Cancel',
     isProcessing = false,
+    variant = 'confirm',
 }: ConfirmationModalProps) {
     if (!isOpen) return null;
 
@@ -28,7 +30,12 @@ export function ConfirmationModal({
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full overflow-hidden border border-gray-200 dark:border-gray-700 animate-in fade-in zoom-in duration-200">
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400">
+                        <div className={clsx(
+                            "p-2 rounded-lg",
+                            variant === 'alert'
+                                ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                                : "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
+                        )}>
                             <AlertTriangle size={24} />
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h3>
@@ -39,20 +46,27 @@ export function ConfirmationModal({
                     </p>
 
                     <div className="flex justify-end gap-3">
+                        {variant === 'confirm' && (
+                            <button
+                                onClick={onClose}
+                                disabled={isProcessing}
+                                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors"
+                            >
+                                {cancelLabel}
+                            </button>
+                        )}
                         <button
-                            onClick={onClose}
+                            onClick={variant === 'alert' ? onClose : onConfirm}
                             disabled={isProcessing}
-                            className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors"
-                        >
-                            {cancelLabel}
-                        </button>
-                        <button
-                            onClick={onConfirm}
-                            disabled={isProcessing}
-                            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors disabled:opacity-50"
+                            className={clsx(
+                                "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50",
+                                variant === 'alert'
+                                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                                    : "bg-purple-600 text-white hover:bg-purple-700"
+                            )}
                         >
                             {isProcessing && <Loader2 size={16} className="animate-spin" />}
-                            {confirmLabel}
+                            {variant === 'alert' ? 'OK' : confirmLabel}
                         </button>
                     </div>
                 </div>
@@ -60,3 +74,5 @@ export function ConfirmationModal({
         </div>
     );
 }
+
+import clsx from 'clsx';

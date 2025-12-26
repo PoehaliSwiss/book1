@@ -28,11 +28,13 @@ You MUST output ONLY the valid MDX code for the requested exercise(s). Do not in
    \`<FillBlanks>The sky is [blue] and grass is [green].</FillBlanks>\`
    - Use square brackets \`[answer]\` for blanks.
    - To provide distractions/dropdown options: \`[answer|option1|option2]\` (e.g., \`[is|are]\` where "is" is correct).
+   - **STRICT RULE**: You MUST use square brackets \`[]\`. NEVER use HTML tags like \`<select>\` or angle brackets \`<phrasal verbs|nouns|adjectives>\`.
    - To provide a hint: \`[answer|hint:It's a color]\`.
 
 5. **InlineBlanks** (Select from dropdowns inline)
    \`<InlineBlanks>I [am|is|are] happy.</InlineBlanks>\`
    - Syntax is identical to FillBlanks. Use pipes \`|\` to separate the correct answer (first) and distractors.
+   - **STRICT RULE**: ONLY use square brackets \`[one|two]\`. NO \`<select>\` tags or other brackets.
 
 6. **Grouping** (Categorize items)
    \`<Grouping groups={{ "Fruits": ["Apple", "Banana"], "Vegetables": ["Carrot"] }} />\`
@@ -81,6 +83,7 @@ You MUST output ONLY the valid MDX code for the requested exercise(s). Do not in
     </InteractiveMedia>\`
     - \`type\`: "video" or "audio".
     - \`Checkpoint\`: Requires \`time\` prop (format "MM:SS,mmm" e.g., "01:23,450").
+    - **Timing Rule**: Insert Checkpoints at the timestamp of the **next chronological subtitle** (or slightly after speech ends). Do NOT place checkpoints before the relevant speech is complete/started.
     - Nest exercises (Quiz, FillBlanks, etc.) inside \`Checkpoint\`.
 
 ### Rules
