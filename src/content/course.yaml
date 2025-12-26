@@ -16,3 +16,5 @@ structure:
             path: /a1/chapter-1/podcast-c1
           - title: Podcast 2
             path: /a1/chapter-1/podcast-2
+          - title: Math
+            path: /a1/chapter-1/math
