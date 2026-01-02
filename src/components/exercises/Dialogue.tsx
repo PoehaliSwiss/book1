@@ -32,6 +32,7 @@ interface DialogueProps {
     lines?: DialogueLine[]; // Optional now
     children?: ReactNode;   // Support for nested Message components
     autoPlay?: boolean;
+    hideText?: boolean;     // Hide message text until revealed
 }
 
 // Helper to extract text from ReactNode for TTS
@@ -47,7 +48,7 @@ const extractText = (node: ReactNode): string => {
     return '';
 };
 
-export const Dialogue: React.FC<DialogueProps> = ({ lines: propLines, children, autoPlay = false }) => {
+export const Dialogue: React.FC<DialogueProps> = ({ lines: propLines, children, autoPlay = false, hideText = false }) => {
     const { languageSettings } = useSettings();
     const { markExerciseComplete, isExerciseComplete } = useProgress();
     const location = useLocation();
@@ -353,7 +354,11 @@ export const Dialogue: React.FC<DialogueProps> = ({ lines: propLines, children, 
                                         : "bg-blue-600 text-white rounded-tr-none"
                                 )}
                             >
-                                {line.content}
+                                {hideText ? (
+                                    <span className="text-gray-400 dark:text-gray-500 italic">• • •</span>
+                                ) : (
+                                    line.content
+                                )}
                                 {isLast && !isMuted && line.text && !line.silent && (
                                     <button
                                         onClick={(e) => {

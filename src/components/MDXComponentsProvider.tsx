@@ -13,7 +13,7 @@ import { AudioPhrase } from './exercises/AudioPhrase';
 import { SpeakingChallenge } from './exercises/SpeakingChallenge';
 import { Flashcards } from './exercises/Flashcards';
 import { ImageLabeling } from './exercises/ImageLabeling';
-import { Math } from './exercises/Math';
+import { Hint } from './exercises/Hint';
 
 const components = {
     Quiz,
@@ -31,8 +31,8 @@ const components = {
     Dialogue,
     Flashcards,
     ImageLabeling,
-    Math,
     Message,
+    Hint,
 
     // Add other components here
 };

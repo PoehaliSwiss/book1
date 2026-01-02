@@ -299,14 +299,14 @@ const FlipView: React.FC<{
         <div className="w-full max-w-md perspective-[1000px]">
             <div
                 className={clsx(
-                    "relative w-full aspect-[4/3] transition-transform duration-500 [transform-style:preserve-3d] cursor-pointer",
+                    "relative w-full min-h-[280px] transition-transform duration-500 [transform-style:preserve-3d] cursor-pointer",
                     isFlipped && "[transform:rotateY(180deg)]"
                 )}
                 onClick={() => setIsFlipped(!isFlipped)}
             >
                 {/* Front */}
-                <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center p-8 text-center">
-                    <div className="flex-1 flex flex-col items-center justify-center gap-6">
+                <div className="absolute inset-0 w-full [backface-visibility:hidden] bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center p-8 text-center min-h-[280px]">
+                    <div className="flex-1 flex flex-col items-center justify-center gap-6 w-full">
                         <div className="flex items-center gap-3">
                             <h3 className="text-3xl font-bold text-gray-900 dark:text-white">
                                 {reverseCards ? item.wordTranslation : item.word}
@@ -336,8 +336,8 @@ const FlipView: React.FC<{
                 </div>
 
                 {/* Back */}
-                <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] bg-blue-50 dark:bg-blue-900/20 rounded-2xl shadow-lg border border-blue-100 dark:border-blue-800 flex flex-col items-center justify-center p-8 text-center">
-                    <div className="flex-1 flex flex-col items-center justify-center gap-6">
+                <div className="absolute inset-0 w-full [backface-visibility:hidden] [transform:rotateY(180deg)] bg-blue-50 dark:bg-blue-900/20 rounded-2xl shadow-lg border border-blue-100 dark:border-blue-800 flex flex-col items-center justify-center p-8 text-center min-h-[280px]">
+                    <div className="flex-1 flex flex-col items-center justify-center gap-6 w-full">
                         <h3 className="text-3xl font-bold text-blue-700 dark:text-blue-300">
                             {reverseCards ? item.word : item.wordTranslation}
                         </h3>

@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { useBlanks, getTextFromChildren, type BlankData, type BlankStatus } from './hooks/useBlanks';
 import { useProgress } from '../../context/ProgressContext';
+import { useSettings } from '../../context/SettingsContext';
 import { useLocation } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { generateStableExerciseId } from '../../utils/exerciseId';
@@ -15,7 +16,7 @@ interface InlineBlanksProps {
     options?: string[];
 }
 
-// Context to pass data to markdown components without re-creating them
+// Context to pass data to markdown components (for tables)
 const InlineBlanksContext = React.createContext<{
     blanksData: BlankData[];
     inputs: string[];
@@ -25,7 +26,7 @@ const InlineBlanksContext = React.createContext<{
     renderBlank: (index: number, data: BlankData, status: BlankStatus) => React.ReactNode;
 } | null>(null);
 
-// Component to render a blank within markdown
+// Component to render a blank within markdown (for tables)
 const InlineMarkdownBlank = ({ indexStr }: { indexStr: string }) => {
     const context = React.useContext(InlineBlanksContext);
     if (!context) return null;
@@ -39,7 +40,6 @@ const InlineMarkdownBlank = ({ indexStr }: { indexStr: string }) => {
     const isCorrect = value.trim().toLowerCase() === data.answer.toLowerCase();
     const showValidation = touched[index] && blurred[index] && value.trim() !== '';
 
-
     const status = {
         value,
         isCorrect,
@@ -50,7 +50,7 @@ const InlineMarkdownBlank = ({ indexStr }: { indexStr: string }) => {
     return <>{renderBlank(index, data, status)}</>;
 };
 
-// Stable components object
+// Stable components object for ReactMarkdown (tables)
 const inlineMarkdownComponents = {
     span: (props: any) => {
         const indexStr = props['data-blank'];
@@ -77,13 +77,17 @@ export const InlineBlanks: React.FC<InlineBlanksProps> = ({ children, mode = 'ty
         setIsCompleted(isExerciseComplete(exerciseId));
     }, [location.pathname, children, isExerciseComplete]);
 
-    // Pre-process children: dedent if string to ensure markdown tables work
-    const contentToProcess = useMemo(() => {
-        // Convert children to string first (MDX may pass as array)
+    // Pre-process children: extract text and dedent for table detection
+    const { rawText, isTable } = useMemo(() => {
         const text = getTextFromChildren(children);
 
-        if (text.includes('|') || text.includes('\n')) {
-            const lines = text.split('\n');
+        // Check if it's a markdown table
+        const lines = text.split('\n');
+        const hasPipes = lines.some(line => line.includes('|'));
+        const hasSeparator = lines.some(line => /^\s*\|[\s\-:|]+\|\s*$/.test(line));
+        const tableDetected = hasPipes && hasSeparator;
+
+        if (tableDetected || text.includes('\n')) {
             const minIndent = lines.reduce((min, line) => {
                 if (line.trim().length === 0) return min;
                 const indent = line.match(/^\s*/)?.[0].length || 0;
@@ -91,13 +95,15 @@ export const InlineBlanks: React.FC<InlineBlanksProps> = ({ children, mode = 'ty
             }, Infinity);
 
             if (minIndent !== Infinity && minIndent > 0) {
-                return lines.map(line => line.length >= minIndent ? line.slice(minIndent) : line).join('\n');
+                const dedented = lines.map(line => line.length >= minIndent ? line.slice(minIndent) : line).join('\n');
+                return { rawText: dedented, isTable: tableDetected };
             }
-            return text;
+            return { rawText: text, isTable: tableDetected };
         }
-        return children;
+        return { rawText: text, isTable: false };
     }, [children]);
 
+    // Pass original children to useBlanks so renderContent can preserve React elements like <strong>
     const {
         blanksData,
         inputs,
@@ -105,10 +111,13 @@ export const InlineBlanks: React.FC<InlineBlanksProps> = ({ children, mode = 'ty
         handleBlur,
         touched,
         blurred,
-        revealAnswer,
+        showHintFor,
+        toggleHint,
         renderContent,
         allCorrect
-    } = useBlanks({ children: contentToProcess, mode, options });
+    } = useBlanks({ children, mode, options });
+
+    const { showHints } = useSettings();
 
     // Check completion when all correct
     useEffect(() => {
@@ -175,42 +184,32 @@ export const InlineBlanks: React.FC<InlineBlanksProps> = ({ children, mode = 'ty
                         style={{ width: `${Math.max(answer.length * 10 + 10, 40)}px` }}
                     />
                 )}
-                <button
-                    onClick={() => revealAnswer(index)}
-                    title={value === answer ? "Hide hint" : "Show hint"}
-                    className="ml-0.5 p-0.5 text-gray-400 hover:text-yellow-500 transition-colors focus:outline-none"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
-                        <path d="M9 18h6" />
-                        <path d="M10 22h4" />
-                    </svg>
-                </button>
-                {data.hint && (touched[index] && value === data.answer) && (
+                {showHints && data.hint && (
+                    <button
+                        onClick={() => toggleHint(index)}
+                        title={showHintFor[index] ? "Hide hint" : "Show hint"}
+                        className={`ml-0.5 p-0.5 transition-colors focus:outline-none ${showHintFor[index] ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-500'}`}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+                            <path d="M9 18h6" />
+                            <path d="M10 22h4" />
+                        </svg>
+                    </button>
+                )}
+                {data.hint && showHintFor[index] && (
                     <span className="ml-1 text-xs text-gray-500 italic animate-in fade-in whitespace-nowrap">
                         ({data.hint})
                     </span>
                 )}
             </span>
         );
-    }, [mode, inputs, handleInputChange, handleBlur, options, revealAnswer]);
+    }, [mode, inputs, handleInputChange, handleBlur, options, showHints, showHintFor, toggleHint]);
 
-    // Check if content is a markdown table (not just any text with pipes or newlines)
-    const isMarkdown = useMemo(() => {
-        if (typeof contentToProcess !== 'string') return false;
-        const text = contentToProcess;
-        const lines = text.split('\n');
-        // A markdown table must have pipes AND a separator line (e.g., | --- | --- |)
-        const hasPipes = lines.some(line => line.includes('|'));
-        const hasSeparator = lines.some(line => /^\s*\|[\s\-:|]+\|\s*$/.test(line));
-        return hasPipes && hasSeparator;
-    }, [contentToProcess]);
-
-    // Memoize processed markdown to prevent re-parsing
+    // For tables: process raw text to replace [answer] with placeholders, then use ReactMarkdown
     const processedMarkdown = useMemo(() => {
-        if (!isMarkdown) return '';
-        const text = contentToProcess as string;
-        const parts = text.split(/(\[.*?\])/g);
+        if (!isTable) return '';
+        const parts = rawText.split(/(\[.*?\])/g);
         let blankIndex = 0;
         return parts.map(part => {
             if (part.startsWith('[') && part.endsWith(']')) {
@@ -219,35 +218,37 @@ export const InlineBlanks: React.FC<InlineBlanksProps> = ({ children, mode = 'ty
             }
             return part;
         }).join('');
-    }, [isMarkdown, contentToProcess]);
+    }, [isTable, rawText]);
 
-
-    if (isMarkdown) {
-        return (
-            <div className="relative">
-                {isCompleted && (
-                    <div className="absolute -top-3 -right-3 bg-green-500 text-white rounded-full p-2 shadow-lg z-10">
-                        <Check size={20} />
-                    </div>
-                )}
-                <div className="leading-normal prose dark:prose-invert max-w-none">
-                    <InlineBlanksContext.Provider value={{ blanksData, inputs, touched, blurred, handleBlur, renderBlank }}>
-                        <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            rehypePlugins={[rehypeRaw]}
-                            components={inlineMarkdownComponents}
-                        >
-                            {processedMarkdown}
-                        </ReactMarkdown>
-                    </InlineBlanksContext.Provider>
-                </div>
-            </div>
+    // Conditional rendering: ReactMarkdown for tables, renderContent for normal content
+    let content;
+    if (isTable) {
+        content = (
+            <InlineBlanksContext.Provider value={{ blanksData, inputs, touched, blurred, handleBlur, renderBlank }}>
+                <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeRaw]}
+                    components={inlineMarkdownComponents}
+                >
+                    {processedMarkdown}
+                </ReactMarkdown>
+            </InlineBlanksContext.Provider>
         );
+    } else {
+        // Use renderContent which preserves React elements like <strong>, <em>
+        content = renderContent(renderBlank);
     }
 
     return (
-        <span className="leading-normal">
-            {renderContent(renderBlank)}
-        </span>
+        <div className="relative">
+            {isCompleted && (
+                <div className="absolute -top-3 -right-3 bg-green-500 text-white rounded-full p-2 shadow-lg z-10">
+                    <Check size={20} />
+                </div>
+            )}
+            <div className="leading-normal prose dark:prose-invert max-w-none">
+                {content}
+            </div>
+        </div>
     );
 };

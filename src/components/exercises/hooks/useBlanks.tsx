@@ -1,18 +1,59 @@
 import React, { useState, useMemo, useCallback } from 'react';
 
-// Helper to extract text from ReactNode
+// Helper to extract text from ReactNode, preserving line breaks
 export function getTextFromChildren(node: React.ReactNode): string {
     if (typeof node === 'string') return node;
     if (typeof node === 'number') return node.toString();
-    if (Array.isArray(node)) return node.map(getTextFromChildren).join('');
+    if (Array.isArray(node)) {
+        return node.map((child, idx) => {
+            const text = getTextFromChildren(child);
+            // Add newline after block elements in arrays (except last)
+            if (React.isValidElement(child)) {
+                const type = child.type;
+                // Check for block-level elements that should have newlines
+                if (type === 'p' || type === 'div' || type === 'li' || type === 'br') {
+                    return text + (idx < node.length - 1 ? '\n' : '');
+                }
+            }
+            return text;
+        }).join('');
+    }
     if (React.isValidElement(node)) {
+        const type = node.type;
+        // Handle br element
+        if (type === 'br') return '\n';
+
         const props = node.props as { children?: React.ReactNode };
         if (props.children) {
-            return getTextFromChildren(props.children);
+            const content = getTextFromChildren(props.children);
+            // Add trailing newline for block elements
+            if (type === 'p' || type === 'div') {
+                return content + '\n';
+            }
+            return content;
         }
     }
     return '';
 };
+
+// Helper to check if content should be rendered with markdown
+export function isMarkdownContent(text: string): boolean {
+    // Check for markdown features that require rendering
+    const hasBold = text.includes('**');
+    const hasItalic = /(?<!\*)\*(?!\*)/.test(text); // Single asterisk not preceded/followed by another
+    const hasMultipleLines = text.includes('\n');
+
+    // Check for lists (- item, * item, or 1. item at start of line)
+    const hasList = /^\s*[-*]\s+/m.test(text) || /^\s*\d+\.\s+/m.test(text);
+
+    // Check for tables specifically
+    const lines = text.split('\n');
+    const hasPipes = lines.some(line => line.includes('|'));
+    const hasSeparator = lines.some(line => /^\s*\|[\s\-:|]+\|\s*$/.test(line));
+    const isTable = hasPipes && hasSeparator;
+
+    return isTable || hasBold || hasItalic || hasMultipleLines || hasList;
+}
 
 export interface BlankData {
     answer: string;
@@ -76,6 +117,7 @@ export const useBlanks = ({ children, options: _options = [] }: UseBlanksOptions
     const [blurred, setBlurred] = useState<boolean[]>(() => new Array(answers.length).fill(false));
     const [submitted, setSubmitted] = useState(false);
     const [showAnswers, setShowAnswers] = useState(false);
+    const [showHintFor, setShowHintFor] = useState<boolean[]>(() => new Array(answers.length).fill(false));
 
     const handleInputChange = useCallback((index: number, value: string) => {
         setInputs(prev => {
@@ -116,20 +158,17 @@ export const useBlanks = ({ children, options: _options = [] }: UseBlanksOptions
         setTouched(new Array(answers.length).fill(false));
     }, [answers.length]);
 
-    const revealAnswer = useCallback((index: number) => {
-        setInputs(prev => {
+    // Toggle hint visibility for a specific blank
+    const toggleHint = useCallback((index: number) => {
+        setShowHintFor(prev => {
             const next = [...prev];
-            // Toggle logic: if already correct, clear it? Or just show?
-            // User usually wants to see the answer.
-            next[index] = answers[index];
+            next[index] = !next[index];
             return next;
         });
-        setTouched(prev => {
-            const next = [...prev];
-            next[index] = true;
-            return next;
-        });
-    }, [answers]);
+    }, []);
+
+    // Legacy function name for compatibility - now toggles hint
+    const revealAnswer = toggleHint;
 
     const showAllAnswers = useCallback(() => {
         setInputs([...answers]);
@@ -150,7 +189,7 @@ export const useBlanks = ({ children, options: _options = [] }: UseBlanksOptions
                     const parts = child.split(/(\[.*?\])/g);
                     return parts.map((part, i) => {
                         if (part.startsWith('[') && part.endsWith(']')) {
-                            if (blankIndexCounter >= blanksData.length) return part; // Should not happen if parsing matches
+                            if (blankIndexCounter >= blanksData.length) return part;
 
                             const data = blanksData[blankIndexCounter];
                             const index = blankIndexCounter++;
@@ -208,11 +247,13 @@ export const useBlanks = ({ children, options: _options = [] }: UseBlanksOptions
         blurred,
         submitted,
         showAnswers,
+        showHintFor,
         handleInputChange,
         handleBlur,
         checkAnswers,
         reset,
         revealAnswer,
+        toggleHint,
         showAllAnswers,
         renderContent,
         allCorrect,

@@ -34,8 +34,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "rehype-raw": "^7.0.0",
     "remark-frontmatter": "^5.0.0",
-    "remark-mdx-frontmatter": "^5.2.0",
-    "katex": "^0.16.27"
+    "remark-mdx-frontmatter": "^5.2.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.1",
@@ -48,7 +47,6 @@
     "@types/react-dom": "^19.2.3",
     "@types/node": "^24.10.1",
     "@types/js-yaml": "^4.0.9",
-    "@types/katex": "^0.16.7",
     "gh-pages": "^6.3.0",
     "@mdx-js/rollup": "^3.1.1"
   }

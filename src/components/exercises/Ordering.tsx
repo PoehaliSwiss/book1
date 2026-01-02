@@ -229,13 +229,13 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
                         strategy={verticalListSortingStrategy}
                     >
                         <div className="space-y-2">
-                            {items.map((item) => (
+                            {items.map((item, index) => (
                                 <SortableItem
                                     key={item.id}
                                     id={item.id}
                                     text={item.text}
                                     submitted={submitted}
-                                    isCorrect={submitted && isCorrectOrder}
+                                    isCorrect={submitted && (item.text === correctOrder[index] || (alternatives?.some(alt => item.text === alt[index]) ?? false))}
                                     direction="vertical"
                                     mode={mode}
                                 />
@@ -259,13 +259,13 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
                                 {answerItems.length === 0 && !submitted && (
                                     <span className="text-gray-400 italic">Click words to build the sentence</span>
                                 )}
-                                {answerItems.map((item) => (
+                                {answerItems.map((item, index) => (
                                     <SortableItem
                                         key={item.id}
                                         id={item.id}
                                         text={item.text}
                                         submitted={submitted}
-                                        isCorrect={submitted && isCorrectOrder}
+                                        isCorrect={submitted && (item.text === correctOrder[index] || (alternatives?.some(alt => item.text === alt[index]) ?? false))}
                                         direction="horizontal"
                                         mode={mode}
                                         // We need to pass onClick to SortableItem for horizontal mode removal
