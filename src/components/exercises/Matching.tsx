@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DndContext, useDraggable, useDroppable, type DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import { clsx } from 'clsx';
 import { useSettings } from '../../context/SettingsContext';
@@ -6,6 +6,7 @@ import { useProgress } from '../../context/ProgressContext';
 import { useLocation } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { generateStableExerciseId } from '../../utils/exerciseId';
+import { useExamExercise } from '../../hooks/useExamExercise';
 
 interface MatchingProps {
     pairs: { left: string; right: string }[];
@@ -109,14 +110,19 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
         setDraggableItems(items.sort(() => Math.random() - 0.5));
     }, [pairs, direction]);
 
-    // Generate exercise ID
+    // Generate exercise ID using useMemo for immediate availability
+    const exerciseId = useMemo(() =>
+        generateStableExerciseId(location.pathname, 'Matching', JSON.stringify(pairs)),
+        [location.pathname, pairs]
+    );
+
     useEffect(() => {
-        const lessonPath = location.pathname;
-        const contentId = JSON.stringify(pairs);
-        const exerciseId = generateStableExerciseId(lessonPath, 'Matching', contentId);
         exerciseIdRef.current = exerciseId;
         setIsCompleted(isExerciseComplete(exerciseId));
-    }, [location.pathname, pairs, isExerciseComplete]);
+    }, [exerciseId, isExerciseComplete]);
+
+    // Exam context integration
+    const { markComplete: markExamComplete } = useExamExercise(exerciseId);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -219,11 +225,16 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
 
     // Check completion
     useEffect(() => {
-        if (submitted && allCorrect && exerciseIdRef.current) {
-            markExerciseComplete(exerciseIdRef.current, location.pathname);
-            setIsCompleted(true);
+        if (submitted && exerciseIdRef.current) {
+            if (allCorrect) {
+                markExerciseComplete(exerciseIdRef.current, location.pathname);
+                markExamComplete(true);
+                setIsCompleted(true);
+            } else {
+                markExamComplete(false);
+            }
         }
-    }, [submitted, allCorrect, markExerciseComplete, location.pathname]);
+    }, [submitted, allCorrect, markExerciseComplete, markExamComplete, location.pathname]);
 
     // Filter out matched items for the main view
     const visibleDraggables = draggableItems.filter(item => !Object.values(matches).includes(item.id));

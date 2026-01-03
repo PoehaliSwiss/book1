@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef, type ReactNode } from 'react';
+import React, { useState, useEffect, useRef, useMemo, type ReactNode } from 'react';
 import { useSettings } from '../../context/SettingsContext';
 import { useProgress } from '../../context/ProgressContext';
 import { useLocation } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { Check } from 'lucide-react';
 import { generateStableExerciseId } from '../../utils/exerciseId';
+import { useExamExercise } from '../../hooks/useExamExercise';
 
 interface QuizProps {
     answer: string; // "1" or "1,3"
@@ -22,13 +23,19 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
     const exerciseIdRef = useRef<string>('');
     const [isCompleted, setIsCompleted] = useState(false);
 
-    // Generate stable exercise ID based on content
+    // Generate stable exercise ID using useMemo for immediate availability
+    const exerciseId = useMemo(() =>
+        generateStableExerciseId(location.pathname, 'Quiz', answer),
+        [location.pathname, answer]
+    );
+
     useEffect(() => {
-        const lessonPath = location.pathname;
-        const exerciseId = generateStableExerciseId(lessonPath, 'Quiz', answer);
         exerciseIdRef.current = exerciseId;
         setIsCompleted(isExerciseComplete(exerciseId));
-    }, [location.pathname, answer, isExerciseComplete]);
+    }, [exerciseId, isExerciseComplete]);
+
+    // Exam context integration - use useMemo result for immediate registration
+    const { markComplete: markExamComplete } = useExamExercise(exerciseId);
 
     const correctAnswers = answer.split(',').map(s => s.trim());
     const isCorrect = submitted &&
@@ -59,7 +66,10 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
 
         if (isCorrect && exerciseIdRef.current) {
             markExerciseComplete(exerciseIdRef.current, location.pathname);
+            markExamComplete(true); // Report to exam context
             setIsCompleted(true);
+        } else {
+            markExamComplete(false); // Report incorrect to exam context
         }
     };
 

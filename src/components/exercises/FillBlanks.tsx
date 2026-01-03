@@ -10,6 +10,7 @@ import { useProgress } from '../../context/ProgressContext';
 import { useLocation } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { generateStableExerciseId } from '../../utils/exerciseId';
+import { useExamExercise } from '../../hooks/useExamExercise';
 
 interface FillBlanksProps {
     children: React.ReactNode; // Text with {answer} or [answer]
@@ -124,6 +125,14 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
         exerciseIdRef.current = exerciseId;
         setIsCompleted(isExerciseComplete(exerciseId));
     }, [location.pathname, children, isExerciseComplete]);
+
+    // Exam context integration - use content hash as ID
+    const examExerciseId = useMemo(() => {
+        const childrenText = getTextFromChildren(children);
+        return generateStableExerciseId(location.pathname, 'FillBlanks', childrenText);
+    }, [children, location.pathname]);
+    const { markComplete: markExamComplete } = useExamExercise(examExerciseId);
+
     // Pre-process children: extract text and dedent for table detection
     const { rawText, isTable } = useMemo(() => {
         const text = getTextFromChildren(children);
@@ -349,12 +358,6 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
     const checkAnswers = () => {
         hookCheckAnswers();
         // DnD validation happens in render or calculation below
-
-        // Check if all correct and mark as complete
-        if (allCorrect && exerciseIdRef.current) {
-            markExerciseComplete(exerciseIdRef.current, location.pathname);
-            setIsCompleted(true);
-        }
     };
 
     const reset = () => {
@@ -374,6 +377,19 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
             const droppedId = droppedItems[`drop-${idx}`];
             return droppedId && getItemText(droppedId) === ans;
         });
+
+    // Check completion after submit and report to exam
+    useEffect(() => {
+        if (submitted && exerciseIdRef.current) {
+            if (allCorrect) {
+                markExerciseComplete(exerciseIdRef.current, location.pathname);
+                markExamComplete(true);
+                setIsCompleted(true);
+            } else {
+                markExamComplete(false);
+            }
+        }
+    }, [submitted, allCorrect, markExerciseComplete, markExamComplete, location.pathname]);
 
     const renderBlank = useCallback((index: number, data: BlankData, status: BlankStatus) => {
         const { value } = status;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -8,6 +8,7 @@ import { useProgress } from '../../context/ProgressContext';
 import { useLocation } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { generateStableExerciseId } from '../../utils/exerciseId';
+import { useExamExercise } from '../../hooks/useExamExercise';
 
 interface OrderingProps {
     items: string[];
@@ -100,14 +101,19 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
         }
     }, []); // Empty deps - only run once on mount
 
-    // Generate exercise ID
+    // Generate exercise ID using useMemo for immediate availability
+    const exerciseId = useMemo(() =>
+        generateStableExerciseId(location.pathname, 'Ordering', JSON.stringify(correctOrder)),
+        [location.pathname, correctOrder]
+    );
+
     useEffect(() => {
-        const lessonPath = location.pathname;
-        const contentId = JSON.stringify(items);
-        const exerciseId = generateStableExerciseId(lessonPath, 'Ordering', contentId);
         exerciseIdRef.current = exerciseId;
         setIsCompleted(isExerciseComplete(exerciseId));
-    }, [location.pathname, items, isExerciseComplete]);
+    }, [exerciseId, isExerciseComplete]);
+
+    // Exam context integration
+    const { markComplete: markExamComplete } = useExamExercise(exerciseId);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -205,11 +211,16 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
 
     // Check completion
     useEffect(() => {
-        if (submitted && isCorrectOrder && exerciseIdRef.current) {
-            markExerciseComplete(exerciseIdRef.current, location.pathname);
-            setIsCompleted(true);
+        if (submitted && exerciseIdRef.current) {
+            if (isCorrectOrder) {
+                markExerciseComplete(exerciseIdRef.current, location.pathname);
+                markExamComplete(true);
+                setIsCompleted(true);
+            } else {
+                markExamComplete(false);
+            }
         }
-    }, [submitted, isCorrectOrder, markExerciseComplete, location.pathname]);
+    }, [submitted, isCorrectOrder, markExerciseComplete, markExamComplete, location.pathname]);
 
     return (
         <div className="my-6 p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 relative">

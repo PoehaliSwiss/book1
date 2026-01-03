@@ -9,6 +9,7 @@ import { useSettings } from '../../context/SettingsContext';
 import { useLocation } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { generateStableExerciseId } from '../../utils/exerciseId';
+import { useExamExercise } from '../../hooks/useExamExercise';
 
 interface InlineBlanksProps {
     children: React.ReactNode;
@@ -77,6 +78,13 @@ export const InlineBlanks: React.FC<InlineBlanksProps> = ({ children, mode = 'ty
         setIsCompleted(isExerciseComplete(exerciseId));
     }, [location.pathname, children, isExerciseComplete]);
 
+    // Exam context integration
+    const examExerciseId = useMemo(() => {
+        const childrenText = getTextFromChildren(children);
+        return generateStableExerciseId(location.pathname, 'InlineBlanks', childrenText);
+    }, [children, location.pathname]);
+    const { markComplete: markExamComplete } = useExamExercise(examExerciseId);
+
     // Pre-process children: extract text and dedent for table detection
     const { rawText, isTable } = useMemo(() => {
         const text = getTextFromChildren(children);
@@ -123,9 +131,10 @@ export const InlineBlanks: React.FC<InlineBlanksProps> = ({ children, mode = 'ty
     useEffect(() => {
         if (allCorrect && exerciseIdRef.current && !isCompleted) {
             markExerciseComplete(exerciseIdRef.current, location.pathname);
+            markExamComplete(true);
             setIsCompleted(true);
         }
-    }, [allCorrect, isCompleted, markExerciseComplete, location.pathname]);
+    }, [allCorrect, isCompleted, markExerciseComplete, markExamComplete, location.pathname]);
 
     const renderBlank = useCallback((index: number, data: BlankData, status: BlankStatus) => {
         const { value } = status;
