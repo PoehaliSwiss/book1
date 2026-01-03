@@ -19,6 +19,7 @@ import { ImageLabeling } from './exercises/ImageLabeling';
 import { Flashcards } from './exercises/Flashcards';
 import { Hint } from './exercises/Hint';
 import { Exam } from './exercises/Exam';
+import { Math } from './exercises/Math';
 
 interface MDXViewerProps {
     content: string;
@@ -55,7 +56,7 @@ export const MDXViewer: React.FC<MDXViewerProps> = ({ content, className }) => {
                 const componentTypes = [
                     'Quiz', 'Ordering', 'Matching', 'FillBlanks', 'Grouping',
                     'Media', 'InlineBlanks', 'Dialogue', 'InteractiveMedia',
-                    'AudioPhrase', 'SpeakingChallenge', 'Flashcards', 'ImageLabeling', 'Exam'
+                    'AudioPhrase', 'SpeakingChallenge', 'Flashcards', 'ImageLabeling', 'Exam' ,'Math'
                 ];
 
                 componentTypes.forEach(type => {
@@ -98,6 +99,7 @@ export const MDXViewer: React.FC<MDXViewerProps> = ({ content, className }) => {
             ImageLabeling, imagelabeling: ImageLabeling,
             Hint, hint: Hint,
             Exam, exam: Exam,
+            Math, math: Math,
         };
     }, []);
 

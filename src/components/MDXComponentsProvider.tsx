@@ -15,6 +15,7 @@ import { Flashcards } from './exercises/Flashcards';
 import { ImageLabeling } from './exercises/ImageLabeling';
 import { Hint } from './exercises/Hint';
 import { Exam } from './exercises/Exam';
+import { Math } from './exercises/Math';
 
 const components = {
     Quiz,
@@ -32,6 +33,7 @@ const components = {
     Dialogue,
     Flashcards,
     ImageLabeling,
+    Math,
     Message,
     Hint,
     Exam,
