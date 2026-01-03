@@ -1,5 +1,7 @@
 // Progress tracking utilities for localStorage
 
+import { normalizePath } from './pathUtils';
+
 export interface ExerciseProgress {
     exerciseId: string;
     lessonPath: string;
@@ -51,10 +53,11 @@ export function getAllProgress(): Map<string, ExerciseProgress> {
 // Save exercise progress
 export function saveExerciseProgress(exerciseId: string, lessonPath: string): void {
     try {
+        const normalizedPath = normalizePath(lessonPath);
         const progress = getAllProgress();
         progress.set(exerciseId, {
             exerciseId,
-            lessonPath,
+            lessonPath: normalizedPath,
             completed: true,
             lastAttempt: Date.now()
         });
@@ -77,11 +80,12 @@ export function getLessonProgress(
     lessonPath: string,
     totalExercises: number
 ): LessonProgress {
+    const normalizedPath = normalizePath(lessonPath);
     const progress = getAllProgress();
 
-    // Filter to only exercises for this lesson
+    // Filter to only exercises for this lesson (use normalized paths for comparison)
     const lessonExercises = Array.from(progress.values())
-        .filter(p => p.lessonPath === lessonPath && p.completed);
+        .filter(p => normalizePath(p.lessonPath) === normalizedPath && p.completed);
 
     // Count all completed exercises for this lesson
     // Cap at totalExercises to prevent showing "7/6" if old exercises remain in storage
@@ -109,9 +113,10 @@ export function getFolderProgress(
     let completedLessons = 0;
 
     for (const lesson of lessons) {
+        const normalizedLessonPath = normalizePath(lesson.path);
         totalExercises += lesson.exerciseCount;
         const lessonCompleted = Array.from(progress.values())
-            .filter(p => p.lessonPath === lesson.path && p.completed)
+            .filter(p => normalizePath(p.lessonPath) === normalizedLessonPath && p.completed)
             .length;
 
         completedExercises += lessonCompleted;
@@ -145,9 +150,10 @@ export function getCourseProgress(
     let completedLessons = 0;
 
     for (const lesson of allLessons) {
+        const normalizedLessonPath = normalizePath(lesson.path);
         totalExercises += lesson.exerciseCount;
         const lessonCompleted = Array.from(progress.values())
-            .filter(p => p.lessonPath === lesson.path && p.completed)
+            .filter(p => normalizePath(p.lessonPath) === normalizedLessonPath && p.completed)
             .length;
 
         completedExercises += lessonCompleted;
