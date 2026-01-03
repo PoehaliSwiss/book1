@@ -14,6 +14,7 @@ import { SpeakingChallenge } from './exercises/SpeakingChallenge';
 import { Flashcards } from './exercises/Flashcards';
 import { ImageLabeling } from './exercises/ImageLabeling';
 import { Hint } from './exercises/Hint';
+import { Exam } from './exercises/Exam';
 
 const components = {
     Quiz,
@@ -33,6 +34,7 @@ const components = {
     ImageLabeling,
     Message,
     Hint,
+    Exam,
 
     // Add other components here
 };
