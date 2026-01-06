@@ -10,7 +10,8 @@ export const EXERCISE_COMPONENTS = [
     'SpeakingChallenge',
     'InteractiveMedia',
     'AudioPhrase',
-    'Dialogue'
+    'Dialogue',
+    'ImageLabeling'
 ];
 
 export function countExercisesInMdx(mdxContent: string | any): number {

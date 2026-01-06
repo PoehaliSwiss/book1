@@ -245,13 +245,18 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
                 if (lastMarkedCorrectRef.current !== allCorrect) {
                     lastMarkedCorrectRef.current = allCorrect;
                     markExamComplete(allCorrect);
+                    // Also mark in progress context for sidebar
+                    if (allCorrect && exerciseIdRef.current) {
+                        markExerciseComplete(exerciseIdRef.current, location.pathname);
+                        setIsCompleted(true);
+                    }
                 }
             } else {
                 // Reset when matches cleared
                 lastMarkedCorrectRef.current = null;
             }
         }
-    }, [shouldHideControls, submitted, matches, pairs.length, allCorrect, markExamComplete]);
+    }, [shouldHideControls, submitted, matches, pairs.length, allCorrect, markExamComplete, markExerciseComplete, location.pathname]);
 
     // Filter out matched items for the main view
     const visibleDraggables = draggableItems.filter(item => !Object.values(matches).includes(item.id));

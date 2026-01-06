@@ -233,13 +233,18 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
                 if (lastMarkedCorrectRef.current !== isAllCorrect) {
                     lastMarkedCorrectRef.current = isAllCorrect;
                     markExamComplete(isAllCorrect);
+                    // Also mark in progress context for sidebar
+                    if (isAllCorrect && exerciseIdRef.current) {
+                        markExerciseComplete(exerciseIdRef.current, location.pathname);
+                        setIsCompleted(true);
+                    }
                 }
             } else {
                 // Reset when items cleared
                 lastMarkedCorrectRef.current = null;
             }
         }
-    }, [shouldHideControls, submitted, unplacedItems.length, isAllCorrect, markExamComplete]);
+    }, [shouldHideControls, submitted, unplacedItems.length, isAllCorrect, markExamComplete, markExerciseComplete, location.pathname]);
 
     return (
         <div className="my-6 p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 relative">

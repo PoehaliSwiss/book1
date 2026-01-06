@@ -66,6 +66,11 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
             if (lastMarkedCorrectRef.current !== isCorrectNow) {
                 lastMarkedCorrectRef.current = isCorrectNow;
                 markExamComplete(isCorrectNow);
+                // Also mark in progress context for sidebar
+                if (isCorrectNow && exerciseIdRef.current) {
+                    markExerciseComplete(exerciseIdRef.current, location.pathname);
+                    setIsCompleted(true);
+                }
             }
         } else if (newSelected.length === 0) {
             // Reset when selection cleared

@@ -237,13 +237,18 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
                 if (lastMarkedCorrectRef.current !== isCorrectOrder) {
                     lastMarkedCorrectRef.current = isCorrectOrder;
                     markExamComplete(isCorrectOrder);
+                    // Also mark in progress context for sidebar
+                    if (isCorrectOrder && exerciseIdRef.current) {
+                        markExerciseComplete(exerciseIdRef.current, location.pathname);
+                        setIsCompleted(true);
+                    }
                 }
             } else {
                 // Reset when items cleared
                 lastMarkedCorrectRef.current = null;
             }
         }
-    }, [shouldHideControls, submitted, items, answerItems, correctOrder.length, isCorrectOrder, direction, markExamComplete]);
+    }, [shouldHideControls, submitted, items, answerItems, correctOrder.length, isCorrectOrder, direction, markExamComplete, markExerciseComplete, location.pathname]);
 
     return (
         <div className="my-6 p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 relative">

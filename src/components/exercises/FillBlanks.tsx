@@ -401,13 +401,18 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
                 if (lastMarkedCorrectRef.current !== allCorrect) {
                     lastMarkedCorrectRef.current = allCorrect;
                     markExamComplete(allCorrect);
+                    // Also mark in progress context for sidebar
+                    if (allCorrect && exerciseIdRef.current) {
+                        markExerciseComplete(exerciseIdRef.current, location.pathname);
+                        setIsCompleted(true);
+                    }
                 }
             } else {
                 // Reset when blanks are cleared
                 lastMarkedCorrectRef.current = null;
             }
         }
-    }, [shouldHideControls, submitted, inputs, allCorrect, markExamComplete]);
+    }, [shouldHideControls, submitted, inputs, allCorrect, markExamComplete, markExerciseComplete, location.pathname]);
 
     const renderBlank = useCallback((index: number, data: BlankData, status: BlankStatus) => {
         const { value } = status;

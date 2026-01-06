@@ -286,13 +286,18 @@ export const ImageLabeling: React.FC<ImageLabelingProps> = ({ image, slots, word
                 if (lastMarkedCorrectRef.current !== allCorrect) {
                     lastMarkedCorrectRef.current = allCorrect;
                     markExamComplete(allCorrect);
+                    // Also mark in progress context for sidebar
+                    if (allCorrect && exerciseId) {
+                        markExerciseComplete(exerciseId, location.pathname);
+                        setIsCompleted(true);
+                    }
                 }
             } else {
                 // Reset when slots are cleared
                 lastMarkedCorrectRef.current = null;
             }
         }
-    }, [shouldHideControls, allSlotsFilled, submitted, slots, slotValues, markExamComplete]);
+    }, [shouldHideControls, allSlotsFilled, submitted, slots, slotValues, markExamComplete, exerciseId, markExerciseComplete, location.pathname]);
 
     return (
         <div className="my-6 p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 relative">
