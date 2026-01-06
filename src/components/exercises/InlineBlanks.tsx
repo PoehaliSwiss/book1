@@ -127,7 +127,7 @@ export const InlineBlanks: React.FC<InlineBlanksProps> = ({ children, mode = 'ty
 
     const { showHints } = useSettings();
 
-    // Check completion when all correct
+    // Check completion when all correct (normal mode with Check button)
     useEffect(() => {
         if (allCorrect && exerciseIdRef.current && !isCompleted) {
             markExerciseComplete(exerciseIdRef.current, location.pathname);
@@ -135,6 +135,24 @@ export const InlineBlanks: React.FC<InlineBlanksProps> = ({ children, mode = 'ty
             setIsCompleted(true);
         }
     }, [allCorrect, isCompleted, markExerciseComplete, markExamComplete, location.pathname]);
+
+    // In exam mode, auto-mark as completed when all blanks are filled and update when correctness changes
+    const lastMarkedCorrectRef = useRef<boolean | null>(null);
+    useEffect(() => {
+        if (shouldHideControls) {
+            const allFilled = inputs.every((input: string) => input.trim() !== '');
+            if (allFilled && inputs.length > 0) {
+                // Only call if correctness changed or never called
+                if (lastMarkedCorrectRef.current !== allCorrect) {
+                    lastMarkedCorrectRef.current = allCorrect;
+                    markExamComplete(allCorrect);
+                }
+            } else {
+                // Reset when blanks are cleared
+                lastMarkedCorrectRef.current = null;
+            }
+        }
+    }, [shouldHideControls, inputs, allCorrect, markExamComplete]);
 
     const renderBlank = useCallback((index: number, data: BlankData, status: BlankStatus) => {
         const { value } = status;

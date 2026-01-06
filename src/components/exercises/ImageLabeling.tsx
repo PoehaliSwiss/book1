@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent, useDroppable } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -7,6 +7,7 @@ import { useProgress } from '../../context/ProgressContext';
 import { useLocation } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { generateStableExerciseId } from '../../utils/exerciseId';
+import { useExamExercise } from '../../hooks/useExamExercise';
 
 interface Slot {
     id: string;
@@ -175,7 +176,6 @@ export const ImageLabeling: React.FC<ImageLabelingProps> = ({ image, slots, word
     const [submitted, setSubmitted] = useState(false);
     const { markExerciseComplete, isExerciseComplete } = useProgress();
     const location = useLocation();
-    const exerciseIdRef = useRef<string>('');
     const [isCompleted, setIsCompleted] = useState(false);
 
     const sensors = useSensors(
@@ -203,16 +203,22 @@ export const ImageLabeling: React.FC<ImageLabelingProps> = ({ image, slots, word
         return image;
     }, [image, onResolvePath]);
 
-    useEffect(() => {
-        const lessonPath = location.pathname;
-        const exerciseId = generateStableExerciseId(
-            lessonPath,
+    // Generate exercise ID using useMemo for immediate availability
+    const exerciseId = useMemo(() =>
+        generateStableExerciseId(
+            location.pathname,
             'ImageLabeling',
             JSON.stringify({ image, slots: slots.map(s => s.answer) })
-        );
-        exerciseIdRef.current = exerciseId;
+        ),
+        [location.pathname, image, slots]
+    );
+
+    // Exam context integration
+    const { markComplete: markExamComplete, shouldHideControls } = useExamExercise(exerciseId);
+
+    useEffect(() => {
         setIsCompleted(isExerciseComplete(exerciseId));
-    }, [location.pathname, image, slots, isExerciseComplete]);
+    }, [exerciseId, isExerciseComplete]);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -251,9 +257,12 @@ export const ImageLabeling: React.FC<ImageLabelingProps> = ({ image, slots, word
         setSubmitted(true);
         const allCorrect = slots.every(slot => slotValues[slot.id] === slot.answer);
 
-        if (allCorrect && exerciseIdRef.current) {
-            markExerciseComplete(exerciseIdRef.current, location.pathname);
+        if (allCorrect && exerciseId) {
+            markExerciseComplete(exerciseId, location.pathname);
+            markExamComplete(true);
             setIsCompleted(true);
+        } else {
+            markExamComplete(false);
         }
     };
 
@@ -266,6 +275,24 @@ export const ImageLabeling: React.FC<ImageLabelingProps> = ({ image, slots, word
     const availableWords = words.filter(w => !usedWords.has(w));
     const allSlotsFilled = slots.every(slot => slotValues[slot.id]);
     const isCorrect = submitted && slots.every(slot => slotValues[slot.id] === slot.answer);
+
+    // In exam mode, auto-mark complete when all slots are filled and update when correctness changes
+    const lastMarkedCorrectRef = useRef<boolean | null>(null);
+    useEffect(() => {
+        if (shouldHideControls && !submitted) {
+            if (allSlotsFilled) {
+                const allCorrect = slots.every(slot => slotValues[slot.id] === slot.answer);
+                // Only call if correctness changed or never called
+                if (lastMarkedCorrectRef.current !== allCorrect) {
+                    lastMarkedCorrectRef.current = allCorrect;
+                    markExamComplete(allCorrect);
+                }
+            } else {
+                // Reset when slots are cleared
+                lastMarkedCorrectRef.current = null;
+            }
+        }
+    }, [shouldHideControls, allSlotsFilled, submitted, slots, slotValues, markExamComplete]);
 
     return (
         <div className="my-6 p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 relative">
@@ -317,30 +344,34 @@ export const ImageLabeling: React.FC<ImageLabelingProps> = ({ image, slots, word
             </DndContext>
 
             <div className="mt-6 flex gap-4 items-center">
-                {!submitted ? (
-                    <button
-                        onClick={checkAnswers}
-                        disabled={!allSlotsFilled}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                    >
-                        Check
-                    </button>
-                ) : (
+                {!shouldHideControls && (
                     <>
-                        <div className={clsx(
-                            "px-4 py-2 rounded-lg font-medium",
-                            isCorrect
-                                ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                                : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-                        )}>
-                            {isCorrect ? "✓ Correct!" : "✗ Incorrect"}
-                        </div>
-                        <button
-                            onClick={reset}
-                            className="px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 rounded-lg transition-colors font-medium"
-                        >
-                            Try again
-                        </button>
+                        {!submitted ? (
+                            <button
+                                onClick={checkAnswers}
+                                disabled={!allSlotsFilled}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                            >
+                                Check
+                            </button>
+                        ) : (
+                            <>
+                                <div className={clsx(
+                                    "px-4 py-2 rounded-lg font-medium",
+                                    isCorrect
+                                        ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                                        : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                                )}>
+                                    {isCorrect ? "✓ Correct!" : "✗ Incorrect"}
+                                </div>
+                                <button
+                                    onClick={reset}
+                                    className="px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 rounded-lg transition-colors font-medium"
+                                >
+                                    Try again
+                                </button>
+                            </>
+                        )}
                     </>
                 )}
             </div>

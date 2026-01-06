@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef, type ReactNode } from 'react';
+import React, { useState, useEffect, useRef, useMemo, type ReactNode } from 'react';
 import { Mic, Square, Eye, EyeOff, Check, RotateCcw } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useSettings } from '../../context/SettingsContext';
 import { useProgress } from '../../context/ProgressContext';
 import { useLocation } from 'react-router-dom';
 import { generateStableExerciseId } from '../../utils/exerciseId';
+import { useExamExercise } from '../../hooks/useExamExercise';
 
 interface SpeakingChallengeProps {
     children: ReactNode;
@@ -42,26 +43,31 @@ export const SpeakingChallenge: React.FC<SpeakingChallengeProps> = ({ children, 
 
     const { markExerciseComplete, isExerciseComplete } = useProgress();
     const location = useLocation();
-    const exerciseIdRef = useRef<string>('');
     const [isCompleted, setIsCompleted] = useState(false);
 
     const text = extractText(children);
 
-    // Generate exercise ID
+    // Generate exercise ID using useMemo for immediate availability
+    const exerciseId = useMemo(() =>
+        generateStableExerciseId(location.pathname, 'SpeakingChallenge', text),
+        [location.pathname, text]
+    );
+
+    // Exam context integration
+    const { markComplete: markExamComplete } = useExamExercise(exerciseId);
+
     useEffect(() => {
-        const lessonPath = location.pathname;
-        const exerciseId = generateStableExerciseId(lessonPath, 'SpeakingChallenge', text);
-        exerciseIdRef.current = exerciseId;
         setIsCompleted(isExerciseComplete(exerciseId));
-    }, [location.pathname, text, isExerciseComplete]);
+    }, [exerciseId, isExerciseComplete]);
 
     // Check completion
     useEffect(() => {
-        if (status === 'correct' && exerciseIdRef.current) {
-            markExerciseComplete(exerciseIdRef.current, location.pathname);
+        if (status === 'correct' && exerciseId) {
+            markExerciseComplete(exerciseId, location.pathname);
+            markExamComplete(true); // Report to exam context
             setIsCompleted(true);
         }
-    }, [status, markExerciseComplete, location.pathname]);
+    }, [status, markExerciseComplete, markExamComplete, location.pathname, exerciseId]);
 
     // Split text into words, keeping punctuation attached to words for display but handling it in matching
     const words = text.split(/\s+/);

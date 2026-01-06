@@ -96,12 +96,14 @@ export function ExamProvider({ children, timeLimit, onComplete }: ExamProviderPr
     }, [isTimeUp, results, isExamActive, onComplete]);
 
     const registerExercise = useCallback((exerciseId: string) => {
+        console.log(`[ExamContext] registerExercise called for: ${exerciseId}`);
         registeredExercises.current.add(exerciseId);
         // Initialize result if not exists
         setResults(prev => {
             if (!prev.has(exerciseId)) {
                 const newMap = new Map(prev);
                 newMap.set(exerciseId, { exerciseId, completed: false, correct: false });
+                console.log(`[ExamContext] Registered new exercise: ${exerciseId}, total now: ${newMap.size}`);
                 return newMap;
             }
             return prev;
@@ -109,6 +111,7 @@ export function ExamProvider({ children, timeLimit, onComplete }: ExamProviderPr
     }, []);
 
     const markExerciseComplete = useCallback((exerciseId: string, correct: boolean) => {
+        console.log(`[ExamContext] markExerciseComplete: ${exerciseId}, correct: ${correct}`);
         setResults(prev => {
             const newMap = new Map(prev);
             newMap.set(exerciseId, {
@@ -117,6 +120,8 @@ export function ExamProvider({ children, timeLimit, onComplete }: ExamProviderPr
                 correct,
                 answeredAt: Date.now()
             });
+            const completedCount = Array.from(newMap.values()).filter(r => r.completed).length;
+            console.log(`[ExamContext] Completed count after mark: ${completedCount}/${newMap.size}`);
             return newMap;
         });
     }, []);

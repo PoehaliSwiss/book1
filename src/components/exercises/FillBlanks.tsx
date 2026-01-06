@@ -391,12 +391,20 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
         }
     }, [submitted, allCorrect, markExerciseComplete, markExamComplete, location.pathname]);
 
-    // In exam mode, auto-mark as completed when all blanks filled
+    // In exam mode, auto-mark as completed when all blanks filled and update when correctness changes
+    const lastMarkedCorrectRef = useRef<boolean | null>(null);
     useEffect(() => {
         if (shouldHideControls && !submitted) {
             const allFilled = inputs.every(input => input.trim() !== '');
             if (allFilled && inputs.length > 0) {
-                markExamComplete(allCorrect);
+                // Only call if correctness changed or never called
+                if (lastMarkedCorrectRef.current !== allCorrect) {
+                    lastMarkedCorrectRef.current = allCorrect;
+                    markExamComplete(allCorrect);
+                }
+            } else {
+                // Reset when blanks are cleared
+                lastMarkedCorrectRef.current = null;
             }
         }
     }, [shouldHideControls, submitted, inputs, allCorrect, markExamComplete]);

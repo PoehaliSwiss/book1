@@ -15,6 +15,7 @@ export function useExamExercise(exerciseId: string) {
     // Register exercise with exam context when mounted
     useEffect(() => {
         if (exam && exerciseId && !hasRegistered.current) {
+            console.log(`[useExamExercise] Registering exercise: ${exerciseId}`);
             exam.registerExercise(exerciseId);
             hasRegistered.current = true;
         }
@@ -23,6 +24,7 @@ export function useExamExercise(exerciseId: string) {
     // Function to mark exercise as complete
     const markComplete = (isCorrect: boolean) => {
         if (exam && exerciseId) {
+            console.log(`[useExamExercise] Marking complete: ${exerciseId}, isCorrect: ${isCorrect}`);
             exam.markExerciseComplete(exerciseId, isCorrect);
         }
     };
