@@ -236,10 +236,20 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
         }
     }, [submitted, allCorrect, markExerciseComplete, markExamComplete, location.pathname]);
 
-    // In exam mode, auto-mark as completed when all pairs matched
+    // In exam mode, auto-mark as completed when all pairs matched and update when correctness changes
+    const lastMarkedCorrectRef = React.useRef<boolean | null>(null);
     useEffect(() => {
-        if (shouldHideControls && !submitted && Object.keys(matches).length === pairs.length) {
-            markExamComplete(allCorrect);
+        if (shouldHideControls && !submitted) {
+            if (Object.keys(matches).length === pairs.length) {
+                // Only call if correctness changed or never called
+                if (lastMarkedCorrectRef.current !== allCorrect) {
+                    lastMarkedCorrectRef.current = allCorrect;
+                    markExamComplete(allCorrect);
+                }
+            } else {
+                // Reset when matches cleared
+                lastMarkedCorrectRef.current = null;
+            }
         }
     }, [shouldHideControls, submitted, matches, pairs.length, allCorrect, markExamComplete]);
 

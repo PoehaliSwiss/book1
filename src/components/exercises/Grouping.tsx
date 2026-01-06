@@ -224,10 +224,20 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
         }
     }, [submitted, isAllCorrect, markExerciseComplete, markExamComplete, location.pathname]);
 
-    // In exam mode, auto-mark as completed when all items placed
+    // In exam mode, auto-mark as completed when all items placed and update when correctness changes
+    const lastMarkedCorrectRef = React.useRef<boolean | null>(null);
     useEffect(() => {
-        if (shouldHideControls && !submitted && unplacedItems.length === 0) {
-            markExamComplete(isAllCorrect);
+        if (shouldHideControls && !submitted) {
+            if (unplacedItems.length === 0) {
+                // Only call if correctness changed or never called
+                if (lastMarkedCorrectRef.current !== isAllCorrect) {
+                    lastMarkedCorrectRef.current = isAllCorrect;
+                    markExamComplete(isAllCorrect);
+                }
+            } else {
+                // Reset when items cleared
+                lastMarkedCorrectRef.current = null;
+            }
         }
     }, [shouldHideControls, submitted, unplacedItems.length, isAllCorrect, markExamComplete]);
 

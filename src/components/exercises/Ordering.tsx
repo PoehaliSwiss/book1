@@ -222,7 +222,8 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
         }
     }, [submitted, isCorrectOrder, markExerciseComplete, markExamComplete, location.pathname]);
 
-    // In exam mode, auto-mark as completed when user has arranged items
+    // In exam mode, auto-mark as completed when user has arranged items and update when correctness changes
+    const lastMarkedCorrectRef = React.useRef<boolean | null>(null);
     useEffect(() => {
         if (shouldHideControls && !submitted) {
             // For vertical: always have items arranged
@@ -232,7 +233,14 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
                 : answerItems.length === correctOrder.length;  // All words placed
 
             if (hasAttempted) {
-                markExamComplete(isCorrectOrder);
+                // Only call if correctness changed or never called
+                if (lastMarkedCorrectRef.current !== isCorrectOrder) {
+                    lastMarkedCorrectRef.current = isCorrectOrder;
+                    markExamComplete(isCorrectOrder);
+                }
+            } else {
+                // Reset when items cleared
+                lastMarkedCorrectRef.current = null;
             }
         }
     }, [shouldHideControls, submitted, items, answerItems, correctOrder.length, isCorrectOrder, direction, markExamComplete]);

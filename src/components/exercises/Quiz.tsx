@@ -44,6 +44,9 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
 
     const isMultiple = multiple || answer.includes(',');
 
+    // Track last marked correctness to prevent infinite loops
+    const lastMarkedCorrectRef = React.useRef<boolean | null>(null);
+
     const handleSelect = (index: number) => {
         if (submitted) return;
         const val = (index + 1).toString();
@@ -59,7 +62,14 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
         if (shouldHideControls && newSelected.length > 0) {
             const isCorrectNow = newSelected.length === correctAnswers.length &&
                 newSelected.every(s => correctAnswers.includes(s));
-            markExamComplete(isCorrectNow);
+            // Only call if correctness changed
+            if (lastMarkedCorrectRef.current !== isCorrectNow) {
+                lastMarkedCorrectRef.current = isCorrectNow;
+                markExamComplete(isCorrectNow);
+            }
+        } else if (newSelected.length === 0) {
+            // Reset when selection cleared
+            lastMarkedCorrectRef.current = null;
         }
     };
 
