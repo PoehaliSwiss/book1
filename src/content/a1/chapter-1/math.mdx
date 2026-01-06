@@ -16,4 +16,51 @@ Use [answer] for typing, or [answer|opt1|opt2] for picker options. Add hint:text
 
 </FillBlanks>
 
+
+<Ordering items={["1","2","3"]} direction="horizontal" mode="compact" />
+
+<Matching pairs={[{"left":"1","right":"1"},{"left":"2","right":"2"},{"left":"3","right":"3"}]} />
+
+<Grouping groups={{"Group 1":["1","2","3"],"Group 2":["a","b","c"]}} />
+
+<ImageLabeling image="/public/images/a1/chapter-1/OIG2.jpeg" slots={[{"id":"slot-1767720869411","x":52.2,"y":24.7,"answer":"Berg"},{"id":"slot-1767720880907","x":53.9,"y":77.4,"answer":"See"}]} words={["Berg","See"]} />
+
+<InlineBlanks>
+
+Use [answer] for typing, or [answer|opt1|opt2] for picker options. Add hint:text for explanations. [answer|opt1|opt2|hint:text for explanations]
+
+</InlineBlanks><FillBlanks>
+
+Use [answer] for typing, or [answer|opt1|opt2] for picker options. Add hint:text for explanations. [answer|opt1|opt2|hint:text for explanations]
+
+</FillBlanks>
+
+<AudioPhrase     >
+
+very long text
+
+</AudioPhrase>
+
+<Dialogue>
+
+  <Message speaker="Anna" side="left">
+    Hallo!
+  </Message>
+  <Message speaker="Markus" side="right">
+    Hi! Wie geht es dir?
+  </Message>
+
+</Dialogue>
+
+<Flashcards items={[{"word":"a","wordTranslation":"a","phrase":"b","phraseTranslation":"b","category":"c","partOfSpeech":"noun"}]} lang="de-DE" translationLang="en-US"    showLearn={true} showQuiz={true} showMatch={true} showType={true} showSpeak={true} />
+
+<Hint title="Hint">
+asfasfd
+Your hint text here
+
+</Hint>
+
+
+<Math formula="\sqrt{x}" />
+
 </Exam>
