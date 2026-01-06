@@ -80,14 +80,12 @@ export function ExamProvider({ children, timeLimit, onComplete }: ExamProviderPr
         };
     }, [isExamActive, isPaused, isTimeUp, remainingTime]);
 
-    // Call onComplete when time is up or all exercises are completed
+    // Call onComplete only when time is up (user must click Finish button otherwise)
     useEffect(() => {
-        const totalExercises = registeredExercises.current.size;
-        const completedExercises = Array.from(results.values()).filter(r => r.completed).length;
-        const allCompleted = totalExercises > 0 && completedExercises === totalExercises;
-
-        if ((isTimeUp || allCompleted) && isExamActive && !hasCalledOnComplete.current) {
+        if (isTimeUp && isExamActive && !hasCalledOnComplete.current) {
             hasCalledOnComplete.current = true;
+            const totalExercises = registeredExercises.current.size;
+            const completedExercises = Array.from(results.values()).filter(r => r.completed).length;
             const correctExercises = Array.from(results.values()).filter(r => r.correct).length;
             onComplete?.(results, {
                 total: totalExercises,
