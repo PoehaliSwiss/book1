@@ -38,6 +38,7 @@ export function useExamExercise(exerciseId: string) {
     return {
         isInExam: !!exam,
         isExamActive: exam?.isExamActive ?? false,
+        shouldHideControls: exam?.isExamActive ?? false,
         isTimeUp: exam?.isTimeUp ?? false,
         markComplete,
         getExamResult,

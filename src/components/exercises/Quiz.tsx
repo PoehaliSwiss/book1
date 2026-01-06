@@ -35,7 +35,7 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
     }, [exerciseId, isExerciseComplete]);
 
     // Exam context integration - use useMemo result for immediate registration
-    const { markComplete: markExamComplete } = useExamExercise(exerciseId);
+    const { markComplete: markExamComplete, shouldHideControls } = useExamExercise(exerciseId);
 
     const correctAnswers = answer.split(',').map(s => s.trim());
     const isCorrect = submitted &&
@@ -47,12 +47,19 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
     const handleSelect = (index: number) => {
         if (submitted) return;
         const val = (index + 1).toString();
+        let newSelected: string[];
         if (isMultiple) {
-            setSelected(prev =>
-                prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]
-            );
+            newSelected = selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val];
         } else {
-            setSelected([val]);
+            newSelected = [val];
+        }
+        setSelected(newSelected);
+
+        // In exam mode (no Check button), auto-mark as completed when user makes selection
+        if (shouldHideControls && newSelected.length > 0) {
+            const isCorrectNow = newSelected.length === correctAnswers.length &&
+                newSelected.every(s => correctAnswers.includes(s));
+            markExamComplete(isCorrectNow);
         }
     };
 
@@ -162,50 +169,54 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
             </div>
 
             <div className="mt-6 flex gap-4">
-                {!submitted ? (
+                {!shouldHideControls && (
                     <>
-                        <button
-                            onClick={handleSubmit}
-                            disabled={selected.length === 0}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm border border-transparent"
-                        >
-                            Check
-                        </button>
-                        {showHints && (
-                            <button
-                                onClick={handleShowAnswers}
-                                className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
-                            >
-                                Show answers
-                            </button>
+                        {!submitted ? (
+                            <>
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={selected.length === 0}
+                                    className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm border border-transparent"
+                                >
+                                    Check
+                                </button>
+                                {showHints && (
+                                    <button
+                                        onClick={handleShowAnswers}
+                                        className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                    >
+                                        Show answers
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={handleReset}
+                                    className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition-colors"
+                                >
+                                    Try again
+                                </button>
+                                {showHints && (
+                                    <button
+                                        onClick={handleShowAnswers}
+                                        className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                    >
+                                        Show answers
+                                    </button>
+                                )}
+                            </>
                         )}
-                    </>
-                ) : (
-                    <>
-                        <button
-                            onClick={handleReset}
-                            className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition-colors"
-                        >
-                            Try again
-                        </button>
-                        {showHints && (
-                            <button
-                                onClick={handleShowAnswers}
-                                className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
-                            >
-                                Show answers
-                            </button>
-                        )}
-                    </>
-                )}
 
-                {submitted && (
-                    <div className={clsx(
-                        "px-4 py-2 rounded-lg font-medium",
-                        isCorrect ? "text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400" : "text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400"
-                    )}>
-                        {isCorrect ? "Correct! 🎉" : "Incorrect, please try again"}
-                    </div>
+                        {submitted && (
+                            <div className={clsx(
+                                "px-4 py-2 rounded-lg font-medium",
+                                isCorrect ? "text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400" : "text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400"
+                            )}>
+                                {isCorrect ? "Correct! 🎉" : "Incorrect, please try again"}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

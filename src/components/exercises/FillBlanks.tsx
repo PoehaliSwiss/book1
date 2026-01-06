@@ -131,7 +131,7 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
         const childrenText = getTextFromChildren(children);
         return generateStableExerciseId(location.pathname, 'FillBlanks', childrenText);
     }, [children, location.pathname]);
-    const { markComplete: markExamComplete } = useExamExercise(examExerciseId);
+    const { markComplete: markExamComplete, shouldHideControls } = useExamExercise(examExerciseId);
 
     // Pre-process children: extract text and dedent for table detection
     const { rawText, isTable } = useMemo(() => {
@@ -378,7 +378,7 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
             return droppedId && getItemText(droppedId) === ans;
         });
 
-    // Check completion after submit and report to exam
+    // Check completion after submit and report to exam (normal mode)
     useEffect(() => {
         if (submitted && exerciseIdRef.current) {
             if (allCorrect) {
@@ -390,6 +390,16 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
             }
         }
     }, [submitted, allCorrect, markExerciseComplete, markExamComplete, location.pathname]);
+
+    // In exam mode, auto-mark as completed when all blanks filled
+    useEffect(() => {
+        if (shouldHideControls && !submitted) {
+            const allFilled = inputs.every(input => input.trim() !== '');
+            if (allFilled && inputs.length > 0) {
+                markExamComplete(allCorrect);
+            }
+        }
+    }, [shouldHideControls, submitted, inputs, allCorrect, markExamComplete]);
 
     const renderBlank = useCallback((index: number, data: BlankData, status: BlankStatus) => {
         const { value } = status;
@@ -598,50 +608,52 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
                 )}
             </DndContext>
 
-            <div className="flex gap-4 items-center flex-wrap">
-                {!submitted ? (
-                    <>
-                        <button
-                            onClick={checkAnswers}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm border border-transparent"
-                        >
-                            Check
-                        </button>
-                        {showHints && (
+            {!shouldHideControls && (
+                <div className="flex gap-4 items-center flex-wrap">
+                    {!submitted ? (
+                        <>
                             <button
-                                onClick={handleShowAnswers}
-                                className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                onClick={checkAnswers}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm border border-transparent"
                             >
-                                Show answers
+                                Check
                             </button>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        <button
-                            onClick={() => {
-                                setSubmitted(false); // Just unsubmit to allow fixing
-                                // Do NOT clear inputs
-                            }}
-                            className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 dark:bg-gray-700 dark:text-white transition-colors"
-                        >
-                            Fix
-                        </button>
-                        <button
-                            onClick={reset}
-                            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
-                        >
-                            Reset
-                        </button>
-                        <span className={clsx(
-                            "font-medium ml-auto",
-                            allCorrect ? "text-green-600" : "text-red-600"
-                        )}>
-                            {allCorrect ? "Correct! 🎉" : "There are errors"}
-                        </span>
-                    </>
-                )}
-            </div>
+                            {showHints && (
+                                <button
+                                    onClick={handleShowAnswers}
+                                    className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                >
+                                    Show answers
+                                </button>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => {
+                                    setSubmitted(false); // Just unsubmit to allow fixing
+                                    // Do NOT clear inputs
+                                }}
+                                className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 dark:bg-gray-700 dark:text-white transition-colors"
+                            >
+                                Fix
+                            </button>
+                            <button
+                                onClick={reset}
+                                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
+                            >
+                                Reset
+                            </button>
+                            <span className={clsx(
+                                "font-medium ml-auto",
+                                allCorrect ? "text-green-600" : "text-red-600"
+                            )}>
+                                {allCorrect ? "Correct! 🎉" : "There are errors"}
+                            </span>
+                        </>
+                    )}
+                </div>
+            )}
         </div>
     );
 };

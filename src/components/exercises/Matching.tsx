@@ -122,7 +122,7 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
     }, [exerciseId, isExerciseComplete]);
 
     // Exam context integration
-    const { markComplete: markExamComplete } = useExamExercise(exerciseId);
+    const { markComplete: markExamComplete, shouldHideControls } = useExamExercise(exerciseId);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -223,7 +223,7 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
 
     const allCorrect = pairs.every((_, i) => isCorrect(i));
 
-    // Check completion
+    // Check completion after submit (normal mode)
     useEffect(() => {
         if (submitted && exerciseIdRef.current) {
             if (allCorrect) {
@@ -235,6 +235,13 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
             }
         }
     }, [submitted, allCorrect, markExerciseComplete, markExamComplete, location.pathname]);
+
+    // In exam mode, auto-mark as completed when all pairs matched
+    useEffect(() => {
+        if (shouldHideControls && !submitted && Object.keys(matches).length === pairs.length) {
+            markExamComplete(allCorrect);
+        }
+    }, [shouldHideControls, submitted, matches, pairs.length, allCorrect, markExamComplete]);
 
     // Filter out matched items for the main view
     const visibleDraggables = draggableItems.filter(item => !Object.values(matches).includes(item.id));
@@ -386,50 +393,52 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
 
             {Object.keys(matches).length > 0 && matchedPairsList}
 
-            <div className="mt-8 flex gap-4 items-center">
-                {!submitted ? (
-                    <>
-                        <button
-                            onClick={checkAnswers}
-                            disabled={Object.keys(matches).length === 0}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            Check
-                        </button>
-                        {showHints && (
+            {!shouldHideControls && (
+                <div className="mt-8 flex gap-4 items-center">
+                    {!submitted ? (
+                        <>
                             <button
-                                onClick={handleShowAnswers}
-                                className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                onClick={checkAnswers}
+                                disabled={Object.keys(matches).length === 0}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
-                                Show answers
+                                Check
                             </button>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        <button
-                            onClick={reset}
-                            className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 dark:bg-gray-700 dark:text-white transition-colors"
-                        >
-                            Try again
-                        </button>
-                        {showHints && (
+                            {showHints && (
+                                <button
+                                    onClick={handleShowAnswers}
+                                    className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                >
+                                    Show answers
+                                </button>
+                            )}
+                        </>
+                    ) : (
+                        <>
                             <button
-                                onClick={handleShowAnswers}
-                                className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                onClick={reset}
+                                className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 dark:bg-gray-700 dark:text-white transition-colors"
                             >
-                                Show answers
+                                Try again
                             </button>
-                        )}
-                        <span className={clsx(
-                            "font-medium",
-                            allCorrect ? "text-green-600" : "text-red-600"
-                        )}>
-                            {allCorrect ? "Correct! 🎉" : "There are errors"}
-                        </span>
-                    </>
-                )}
-            </div>
+                            {showHints && (
+                                <button
+                                    onClick={handleShowAnswers}
+                                    className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                >
+                                    Show answers
+                                </button>
+                            )}
+                            <span className={clsx(
+                                "font-medium",
+                                allCorrect ? "text-green-600" : "text-red-600"
+                            )}>
+                                {allCorrect ? "Correct! 🎉" : "There are errors"}
+                            </span>
+                        </>
+                    )}
+                </div>
+            )}
         </div>
     );
 };

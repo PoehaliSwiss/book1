@@ -83,7 +83,7 @@ export const InlineBlanks: React.FC<InlineBlanksProps> = ({ children, mode = 'ty
         const childrenText = getTextFromChildren(children);
         return generateStableExerciseId(location.pathname, 'InlineBlanks', childrenText);
     }, [children, location.pathname]);
-    const { markComplete: markExamComplete } = useExamExercise(examExerciseId);
+    const { markComplete: markExamComplete, shouldHideControls } = useExamExercise(examExerciseId);
 
     // Pre-process children: extract text and dedent for table detection
     const { rawText, isTable } = useMemo(() => {
@@ -193,7 +193,7 @@ export const InlineBlanks: React.FC<InlineBlanksProps> = ({ children, mode = 'ty
                         style={{ width: `${Math.max(answer.length * 10 + 10, 40)}px` }}
                     />
                 )}
-                {showHints && data.hint && (
+                {showHints && !shouldHideControls && data.hint && (
                     <button
                         onClick={() => toggleHint(index)}
                         title={showHintFor[index] ? "Hide hint" : "Show hint"}

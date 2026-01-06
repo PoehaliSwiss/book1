@@ -120,7 +120,7 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
     }, [exerciseId, isExerciseComplete]);
 
     // Exam context integration
-    const { markComplete: markExamComplete } = useExamExercise(exerciseId);
+    const { markComplete: markExamComplete, shouldHideControls } = useExamExercise(exerciseId);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -211,7 +211,7 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
         return groups[groupId].includes(item.text);
     });
 
-    // Check completion
+    // Check completion after submit (normal mode)
     useEffect(() => {
         if (submitted && exerciseIdRef.current) {
             if (isAllCorrect) {
@@ -223,6 +223,13 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
             }
         }
     }, [submitted, isAllCorrect, markExerciseComplete, markExamComplete, location.pathname]);
+
+    // In exam mode, auto-mark as completed when all items placed
+    useEffect(() => {
+        if (shouldHideControls && !submitted && unplacedItems.length === 0) {
+            markExamComplete(isAllCorrect);
+        }
+    }, [shouldHideControls, submitted, unplacedItems.length, isAllCorrect, markExamComplete]);
 
     return (
         <div className="my-6 p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 relative">
@@ -302,50 +309,52 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
 
             </DndContext>
 
-            <div className="mt-8 flex flex-wrap gap-4 items-center">
-                {!submitted ? (
-                    <>
-                        <button
-                            onClick={checkAnswers}
-                            disabled={unplacedItems.length > 0}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            Check
-                        </button>
-                        {showHints && (
+            {!shouldHideControls && (
+                <div className="mt-8 flex flex-wrap gap-4 items-center">
+                    {!submitted ? (
+                        <>
                             <button
-                                onClick={handleShowAnswers}
-                                className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                onClick={checkAnswers}
+                                disabled={unplacedItems.length > 0}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
-                                Show answers
+                                Check
                             </button>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        <button
-                            onClick={reset}
-                            className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 dark:bg-gray-700 dark:text-white transition-colors"
-                        >
-                            Try again
-                        </button>
-                        {!showAnswers && showHints && (
+                            {showHints && (
+                                <button
+                                    onClick={handleShowAnswers}
+                                    className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                >
+                                    Show answers
+                                </button>
+                            )}
+                        </>
+                    ) : (
+                        <>
                             <button
-                                onClick={handleShowAnswers}
-                                className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                onClick={reset}
+                                className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 dark:bg-gray-700 dark:text-white transition-colors"
                             >
-                                Show answers
+                                Try again
                             </button>
-                        )}
-                        <span className={clsx(
-                            "font-medium ml-auto",
-                            isAllCorrect ? "text-green-600" : "text-red-600"
-                        )}>
-                            {isAllCorrect ? "Correct! 🎉" : "There are errors"}
-                        </span>
-                    </>
-                )}
-            </div>
+                            {!showAnswers && showHints && (
+                                <button
+                                    onClick={handleShowAnswers}
+                                    className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                >
+                                    Show answers
+                                </button>
+                            )}
+                            <span className={clsx(
+                                "font-medium ml-auto",
+                                isAllCorrect ? "text-green-600" : "text-red-600"
+                            )}>
+                                {isAllCorrect ? "Correct! 🎉" : "There are errors"}
+                            </span>
+                        </>
+                    )}
+                </div>
+            )}
         </div>
     );
 };

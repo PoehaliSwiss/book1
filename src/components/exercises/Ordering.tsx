@@ -113,7 +113,7 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
     }, [exerciseId, isExerciseComplete]);
 
     // Exam context integration
-    const { markComplete: markExamComplete } = useExamExercise(exerciseId);
+    const { markComplete: markExamComplete, shouldHideControls } = useExamExercise(exerciseId);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -209,7 +209,7 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
     const isCorrectOrder = checkOrder(currentItems, correctOrder) ||
         (alternatives?.some(alt => checkOrder(currentItems, alt)) ?? false);
 
-    // Check completion
+    // Check completion after submit (normal mode)
     useEffect(() => {
         if (submitted && exerciseIdRef.current) {
             if (isCorrectOrder) {
@@ -221,6 +221,21 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
             }
         }
     }, [submitted, isCorrectOrder, markExerciseComplete, markExamComplete, location.pathname]);
+
+    // In exam mode, auto-mark as completed when user has arranged items
+    useEffect(() => {
+        if (shouldHideControls && !submitted) {
+            // For vertical: always have items arranged
+            // For horizontal: complete when all items placed in answer area
+            const hasAttempted = direction === 'vertical'
+                ? items.length > 0  // User has seen/interacted with items
+                : answerItems.length === correctOrder.length;  // All words placed
+
+            if (hasAttempted) {
+                markExamComplete(isCorrectOrder);
+            }
+        }
+    }, [shouldHideControls, submitted, items, answerItems, correctOrder.length, isCorrectOrder, direction, markExamComplete]);
 
     return (
         <div className="my-6 p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 relative">
@@ -307,52 +322,54 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
                 </div>
             )}
 
-            <div className="mt-6 flex gap-4 items-center">
-                {!submitted ? (
-                    <>
-                        <button
-                            onClick={checkAnswers}
-                            disabled={direction === 'horizontal' && answerItems.length === 0}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm border border-transparent"
-                        >
-                            Check
-                        </button>
-                        {showHints && (
+            {!shouldHideControls && (
+                <div className="mt-6 flex gap-4 items-center">
+                    {!submitted ? (
+                        <>
                             <button
-                                onClick={handleShowAnswers}
-                                className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                onClick={checkAnswers}
+                                disabled={direction === 'horizontal' && answerItems.length === 0}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm border border-transparent"
                             >
-                                Show answers
+                                Check
                             </button>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        <div className={clsx(
-                            "px-4 py-2 rounded-lg font-medium",
-                            isCorrectOrder || showingAnswer
-                                ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                                : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-                        )}>
-                            {isCorrectOrder || showingAnswer ? "✓ Correct!" : "✗ Incorrect"}
-                        </div>
-                        <button
-                            onClick={reset}
-                            className="px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 rounded-lg transition-colors font-medium"
-                        >
-                            Try again
-                        </button>
-                        {showHints && (
+                            {showHints && (
+                                <button
+                                    onClick={handleShowAnswers}
+                                    className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                >
+                                    Show answers
+                                </button>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            <div className={clsx(
+                                "px-4 py-2 rounded-lg font-medium",
+                                isCorrectOrder || showingAnswer
+                                    ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                                    : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                            )}>
+                                {isCorrectOrder || showingAnswer ? "✓ Correct!" : "✗ Incorrect"}
+                            </div>
                             <button
-                                onClick={handleShowAnswers}
-                                className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                onClick={reset}
+                                className="px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 rounded-lg transition-colors font-medium"
                             >
-                                Show answers
+                                Try again
                             </button>
-                        )}
-                    </>
-                )}
-            </div>
+                            {showHints && (
+                                <button
+                                    onClick={handleShowAnswers}
+                                    className="px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 rounded-lg transition-colors font-medium"
+                                >
+                                    Show answers
+                                </button>
+                            )}
+                        </>
+                    )}
+                </div>
+            )}
         </div>
     );
 };

@@ -316,10 +316,25 @@ function ExamStartScreen({ title, timeLimit, previousAttempts, onStart }: ExamSt
 // Main Exam wrapper content
 function ExamContent({ title, children }: { title?: string; children: React.ReactNode }) {
     const exam = useExam();
+    const [showConfirm, setShowConfirm] = useState(false);
 
     if (!exam) return null;
 
-    const { isExamActive, isTimeUp } = exam;
+    const { isExamActive, isTimeUp, totalExercises, completedExercises, finishExam } = exam;
+
+    const handleFinishClick = () => {
+        const incomplete = totalExercises - completedExercises;
+        if (incomplete > 0) {
+            setShowConfirm(true);
+        } else {
+            finishExam();
+        }
+    };
+
+    const handleConfirmFinish = () => {
+        setShowConfirm(false);
+        finishExam();
+    };
 
     return (
         <div className={clsx(
@@ -334,6 +349,36 @@ function ExamContent({ title, children }: { title?: string; children: React.Reac
                 </div>
             )}
             {children}
+            {isExamActive && !isTimeUp && (
+                <div className="mt-8 text-center">
+                    {showConfirm ? (
+                        <div className="inline-flex items-center gap-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-xl">
+                            <span className="text-yellow-800 dark:text-yellow-200 font-medium">
+                                {totalExercises - completedExercises} exercise(s) not checked. Finish anyway?
+                            </span>
+                            <button
+                                onClick={handleConfirmFinish}
+                                className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-medium transition-colors"
+                            >
+                                Yes, Finish
+                            </button>
+                            <button
+                                onClick={() => setShowConfirm(false)}
+                                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={handleFinishClick}
+                            className="px-8 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-medium transition-colors shadow-md"
+                        >
+                            Finish Exam
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
