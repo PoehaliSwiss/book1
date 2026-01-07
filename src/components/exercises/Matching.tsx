@@ -96,7 +96,12 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
         })
     );
 
+    const initializedRef = React.useRef(false);
     useEffect(() => {
+        // Only initialize once on mount
+        if (initializedRef.current) return;
+        initializedRef.current = true;
+
         const source = direction === 'right'
             ? pairs.map((p, i) => ({ text: p.left, index: i }))
             : pairs.map((p, i) => ({ text: p.right, index: i }));
@@ -108,7 +113,7 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
         }));
 
         setDraggableItems(items.sort(() => Math.random() - 0.5));
-    }, [pairs, direction]);
+    }, []); // Empty deps - only run once on mount
 
     // Generate exercise ID using useMemo for immediate availability
     const exerciseId = useMemo(() =>

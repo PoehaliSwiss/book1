@@ -100,13 +100,18 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
         })
     );
 
+    const initializedRef = React.useRef(false);
     useEffect(() => {
+        // Only initialize once on mount
+        if (initializedRef.current) return;
+        initializedRef.current = true;
+
         const allItems: { id: string; text: string }[] = [];
         Object.values(groups).flat().forEach((text, i) => {
             allItems.push({ id: `item-${i}-${text}`, text });
         });
         setItems(allItems.sort(() => Math.random() - 0.5));
-    }, [groups]);
+    }, []); // Empty deps - only run once on mount
 
     // Generate exercise ID using useMemo for immediate availability
     const exerciseId = useMemo(() =>

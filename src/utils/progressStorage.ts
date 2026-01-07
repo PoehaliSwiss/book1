@@ -175,10 +175,53 @@ export function getCourseProgress(
     };
 }
 
+// Reset progress for a specific page
+export function resetPageProgress(pagePath: string): void {
+    try {
+        const normalizedPath = normalizePath(pagePath);
+        const progress = getAllProgress();
+
+        // Remove all exercises for this page
+        const exercisesToRemove: string[] = [];
+        progress.forEach((p, id) => {
+            if (normalizePath(p.lessonPath) === normalizedPath) {
+                exercisesToRemove.push(id);
+            }
+        });
+
+        exercisesToRemove.forEach(id => progress.delete(id));
+
+        const obj = Object.fromEntries(progress);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+
+        // Also clear any checkpoint progress for this page
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('checkpoint_progress_') && key.includes(normalizedPath.replace(/\//g, ':'))) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+    } catch (error) {
+        console.error('Error resetting page progress:', error);
+    }
+}
+
 // Reset all progress
 export function resetAllProgress(): void {
     try {
         localStorage.removeItem(STORAGE_KEY);
+
+        // Also clear all checkpoint progress
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('checkpoint_progress_')) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
     } catch (error) {
         console.error('Error resetting progress:', error);
     }

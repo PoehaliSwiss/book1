@@ -141,6 +141,15 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
                 {children}
             </div>
 
+            {isMultiple && !submitted && (
+                <div className="mb-3 text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Select multiple answers
+                </div>
+            )}
+
             <div className={clsx(
                 direction === 'vertical' ? "space-y-3" : "flex flex-wrap gap-3"
             )}>
@@ -172,12 +181,26 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
                             onClick={() => handleSelect(idx)}
                             style={customStyle}
                             className={clsx(
-                                "border-2 rounded-lg cursor-pointer transition-all duration-200",
+                                "border-2 rounded-lg cursor-pointer transition-all duration-200 flex items-center gap-3",
                                 mode === 'compact' ? "px-3 py-2 text-sm w-fit" : "p-4",
                                 statusClass
                             )}
                         >
-                            {childProps.children}
+                            {/* Checkbox/Radio indicator */}
+                            <div className={clsx(
+                                "flex-shrink-0 w-5 h-5 border-2 flex items-center justify-center transition-colors",
+                                isMultiple ? "rounded" : "rounded-full",
+                                isSelected
+                                    ? "border-blue-500 bg-blue-500 text-white"
+                                    : "border-gray-300 dark:border-gray-500"
+                            )}>
+                                {isSelected && (
+                                    isMultiple
+                                        ? <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                                        : <div className="w-2 h-2 bg-white rounded-full" />
+                                )}
+                            </div>
+                            <span>{childProps.children}</span>
                         </div>
                     );
                 })}

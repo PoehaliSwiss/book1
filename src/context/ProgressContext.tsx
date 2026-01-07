@@ -7,6 +7,7 @@ import {
     getFolderProgress,
     getCourseProgress,
     resetAllProgress,
+    resetPageProgress as resetPageProgressStorage,
     type LessonProgress,
     type FolderProgress,
     type CourseProgress
@@ -20,6 +21,7 @@ interface ProgressContextType {
     getFolderProgressData: (folderPath: string, lessons: Array<{ path: string; exerciseCount: number }>) => FolderProgress;
     getCourseProgressData: (allLessons: Array<{ path: string; exerciseCount: number; folder: string }>) => CourseProgress;
     resetProgress: () => void;
+    resetPageProgress: (pagePath: string) => void;
     refreshProgress: () => void;
 }
 
@@ -62,6 +64,11 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         setRefreshKey(prev => prev + 1); // Trigger re-render
     }, []);
 
+    const resetPageProgress = useCallback((pagePath: string) => {
+        resetPageProgressStorage(pagePath);
+        setRefreshKey(prev => prev + 1); // Trigger re-render
+    }, []);
+
     const refreshProgress = useCallback(() => {
         setRefreshKey(prev => prev + 1);
     }, []);
@@ -75,6 +82,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
                 getFolderProgressData,
                 getCourseProgressData,
                 resetProgress,
+                resetPageProgress,
                 refreshProgress
             }}
         >

@@ -8,7 +8,7 @@ export const EXERCISE_COMPONENTS = [
     'Grouping',
     'Flashcards',
     'SpeakingChallenge',
-    'InteractiveMedia',
+    'Checkpoint', // Count individual checkpoints in InteractiveMedia, not the wrapper
     'AudioPhrase',
     'Dialogue',
     'ImageLabeling'

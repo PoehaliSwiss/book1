@@ -61,12 +61,24 @@ export const InteractiveMedia: React.FC<InteractiveMediaProps> = ({
     const exerciseIdRef = useRef<string>('');
     const [isCompleted, setIsCompleted] = useState(false);
 
-    // Generate exercise ID
+    // Generate exercise ID and load persisted completed checkpoints
     useEffect(() => {
         const lessonPath = location.pathname;
         const exerciseId = generateStableExerciseId(lessonPath, 'InteractiveMedia', src);
         exerciseIdRef.current = exerciseId;
         setIsCompleted(isExerciseComplete(exerciseId));
+
+        // Load completed checkpoints from localStorage
+        const storageKey = `checkpoint_progress_${exerciseId}`;
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+            try {
+                const times = JSON.parse(saved) as number[];
+                setCompletedCheckpoints(new Set(times));
+            } catch (e) {
+                // Ignore parse errors
+            }
+        }
     }, [location.pathname, src, isExerciseComplete]);
 
     // Parse checkpoints from children
@@ -118,15 +130,19 @@ export const InteractiveMedia: React.FC<InteractiveMediaProps> = ({
 
     const seeking = useRef(false);
 
+    // Track which checkpoint was last triggered to prevent repeated triggers in same second
+    const lastTriggeredCheckpointRef = useRef<number | null>(null);
+
     const checkCheckpoints = (time: number) => {
-        // Check for checkpoints
+        // Check for checkpoints - trigger ALL checkpoints, not just uncompleted
         const hitCheckpoint = checkpoints.find(cp =>
             time >= cp.time &&
             time < cp.time + 1 && // 1 second window to catch it
-            !completedCheckpoints.has(cp.time)
+            lastTriggeredCheckpointRef.current !== cp.time // Don't re-trigger same checkpoint in same playthrough
         );
 
         if (hitCheckpoint) {
+            lastTriggeredCheckpointRef.current = hitCheckpoint.time;
             setIsPlaying(false);
             setActiveCheckpoint(hitCheckpoint);
         }
@@ -157,9 +173,16 @@ export const InteractiveMedia: React.FC<InteractiveMediaProps> = ({
 
     const handleContinue = () => {
         if (activeCheckpoint) {
-            setCompletedCheckpoints(prev => new Set(prev).add(activeCheckpoint.time));
+            const newCompleted = new Set(completedCheckpoints).add(activeCheckpoint.time);
+            setCompletedCheckpoints(newCompleted);
             setActiveCheckpoint(null);
             setIsPlaying(true);
+
+            // Persist to localStorage
+            if (exerciseIdRef.current) {
+                const storageKey = `checkpoint_progress_${exerciseIdRef.current}`;
+                localStorage.setItem(storageKey, JSON.stringify(Array.from(newCompleted)));
+            }
         }
     };
 
@@ -350,16 +373,28 @@ export const InteractiveMedia: React.FC<InteractiveMediaProps> = ({
                         {/* Checkpoint Markers */}
                         {checkpoints.map((cp, idx) => {
                             const percent = (cp.time / (duration || 1)) * 100;
-                            const isCompleted = completedCheckpoints.has(cp.time);
+                            const isCheckpointCompleted = completedCheckpoints.has(cp.time);
                             return (
                                 <div
                                     key={idx}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        // Seek to checkpoint time and open it
+                                        const player = playerRef.current;
+                                        if (player) {
+                                            player.currentTime = cp.time;
+                                            setCurrentTime(cp.time);
+                                        }
+                                        lastTriggeredCheckpointRef.current = cp.time;
+                                        setIsPlaying(false);
+                                        setActiveCheckpoint(cp);
+                                    }}
                                     className={clsx(
-                                        "absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-black z-20 transition-all duration-300",
-                                        isCompleted ? "bg-green-500 scale-100" : "bg-yellow-400 scale-100 group-hover/slider:scale-125"
+                                        "absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-black z-20 transition-all duration-300 cursor-pointer hover:scale-150",
+                                        isCheckpointCompleted ? "bg-green-500 scale-100" : "bg-yellow-400 scale-100 group-hover/slider:scale-125"
                                     )}
                                     style={{ left: `${percent}%` }}
-                                    title={`Checkpoint at ${formatTime(cp.time)}`}
+                                    title={`Checkpoint at ${formatTime(cp.time)} - Click to open`}
                                 />
                             );
                         })}
