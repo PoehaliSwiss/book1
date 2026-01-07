@@ -457,19 +457,21 @@ function AppContent() {
                                                     </Helmet>
                                                     <MDXComponentsProvider>
                                                         <article className="prose dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-img:rounded-xl relative">
-                                                            <button
-                                                                onClick={() => {
-                                                                    if (window.confirm('Are you sure you want to reset progress for this page?')) {
-                                                                        resetPageProgress(route.path);
-                                                                        refreshProgress();
-                                                                    }
-                                                                }}
-                                                                className="absolute top-0 right-0 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                                                                title="Reset progress for this page"
-                                                            >
-                                                                <RotateCcw size={14} />
-                                                                Reset
-                                                            </button>
+                                                            <div className="not-prose absolute top-0 right-0 z-10">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        if (window.confirm('Are you sure you want to reset progress for this page?')) {
+                                                                            resetPageProgress(route.path);
+                                                                            refreshProgress();
+                                                                        }
+                                                                    }}
+                                                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
+                                                                    title="Reset progress for this page"
+                                                                >
+                                                                    <RotateCcw size={14} />
+                                                                    Reset
+                                                                </button>
+                                                            </div>
                                                             {route.element}
                                                             <NextLessonNavigation currentPath={route.path} structure={course.structure} />
                                                         </article>
