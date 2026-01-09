@@ -39,6 +39,7 @@ export function useExamExercise(exerciseId: string) {
         isInExam: !!exam,
         isExamActive: exam?.isExamActive ?? false,
         shouldHideControls: exam?.isExamActive ?? false,
+        shouldDeferProgress: exam?.isExamActive ?? false, // Don't update sidebar tree during exam
         isTimeUp: exam?.isTimeUp ?? false,
         markComplete,
         getExamResult,

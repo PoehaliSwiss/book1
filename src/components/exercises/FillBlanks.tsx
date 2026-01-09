@@ -131,7 +131,7 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
         const childrenText = getTextFromChildren(children);
         return generateStableExerciseId(location.pathname, 'FillBlanks', childrenText);
     }, [children, location.pathname]);
-    const { markComplete: markExamComplete, shouldHideControls } = useExamExercise(examExerciseId);
+    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress } = useExamExercise(examExerciseId);
 
     // Pre-process children: extract text and dedent for table detection
     const { rawText, isTable } = useMemo(() => {
@@ -382,14 +382,17 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
     useEffect(() => {
         if (submitted && exerciseIdRef.current) {
             if (allCorrect) {
-                markExerciseComplete(exerciseIdRef.current, location.pathname);
+                // Only mark progress immediately if NOT in exam mode
+                if (!shouldDeferProgress) {
+                    markExerciseComplete(exerciseIdRef.current, location.pathname);
+                }
                 markExamComplete(true);
                 setIsCompleted(true);
             } else {
                 markExamComplete(false);
             }
         }
-    }, [submitted, allCorrect, markExerciseComplete, markExamComplete, location.pathname]);
+    }, [submitted, allCorrect, markExerciseComplete, markExamComplete, location.pathname, shouldDeferProgress]);
 
     // In exam mode, auto-mark as completed when all blanks filled and update when correctness changes
     const lastMarkedCorrectRef = useRef<boolean | null>(null);
@@ -401,9 +404,8 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
                 if (lastMarkedCorrectRef.current !== allCorrect) {
                     lastMarkedCorrectRef.current = allCorrect;
                     markExamComplete(allCorrect);
-                    // Also mark in progress context for sidebar
-                    if (allCorrect && exerciseIdRef.current) {
-                        markExerciseComplete(exerciseIdRef.current, location.pathname);
+                    // Progress is deferred - will be submitted when exam ends
+                    if (allCorrect) {
                         setIsCompleted(true);
                     }
                 }
@@ -412,7 +414,7 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
                 lastMarkedCorrectRef.current = null;
             }
         }
-    }, [shouldHideControls, submitted, inputs, allCorrect, markExamComplete, markExerciseComplete, location.pathname]);
+    }, [shouldHideControls, submitted, inputs, allCorrect, markExamComplete]);
 
     const renderBlank = useCallback((index: number, data: BlankData, status: BlankStatus) => {
         const { value } = status;

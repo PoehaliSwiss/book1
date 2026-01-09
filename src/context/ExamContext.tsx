@@ -41,9 +41,10 @@ interface ExamProviderProps {
     children: ReactNode;
     timeLimit: number; // in seconds
     onComplete?: (results: ExamContextType['results'], stats: { total: number; completed: number; correct: number }) => void;
+    onExerciseComplete?: (exerciseId: string) => void; // Called for each correct exercise when exam ends
 }
 
-export function ExamProvider({ children, timeLimit, onComplete }: ExamProviderProps) {
+export function ExamProvider({ children, timeLimit, onComplete, onExerciseComplete }: ExamProviderProps) {
     const [isExamActive, setIsExamActive] = useState(false);
     const [isTimeUp, setIsTimeUp] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
@@ -87,13 +88,23 @@ export function ExamProvider({ children, timeLimit, onComplete }: ExamProviderPr
             const totalExercises = registeredExercises.current.size;
             const completedExercises = Array.from(results.values()).filter(r => r.completed).length;
             const correctExercises = Array.from(results.values()).filter(r => r.correct).length;
+
+            // Submit progress for correct exercises to the sidebar tree
+            if (onExerciseComplete) {
+                results.forEach((result) => {
+                    if (result.correct) {
+                        onExerciseComplete(result.exerciseId);
+                    }
+                });
+            }
+
             onComplete?.(results, {
                 total: totalExercises,
                 completed: completedExercises,
                 correct: correctExercises
             });
         }
-    }, [isTimeUp, results, isExamActive, onComplete]);
+    }, [isTimeUp, results, isExamActive, onComplete, onExerciseComplete]);
 
     const registerExercise = useCallback((exerciseId: string) => {
         registeredExercises.current.add(exerciseId);

@@ -214,7 +214,7 @@ export const ImageLabeling: React.FC<ImageLabelingProps> = ({ image, slots, word
     );
 
     // Exam context integration
-    const { markComplete: markExamComplete, shouldHideControls } = useExamExercise(exerciseId);
+    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress } = useExamExercise(exerciseId);
 
     useEffect(() => {
         setIsCompleted(isExerciseComplete(exerciseId));
@@ -258,7 +258,10 @@ export const ImageLabeling: React.FC<ImageLabelingProps> = ({ image, slots, word
         const allCorrect = slots.every(slot => slotValues[slot.id] === slot.answer);
 
         if (allCorrect && exerciseId) {
-            markExerciseComplete(exerciseId, location.pathname);
+            // Only mark progress immediately if NOT in exam mode
+            if (!shouldDeferProgress) {
+                markExerciseComplete(exerciseId, location.pathname);
+            }
             markExamComplete(true);
             setIsCompleted(true);
         } else {
@@ -286,9 +289,8 @@ export const ImageLabeling: React.FC<ImageLabelingProps> = ({ image, slots, word
                 if (lastMarkedCorrectRef.current !== allCorrect) {
                     lastMarkedCorrectRef.current = allCorrect;
                     markExamComplete(allCorrect);
-                    // Also mark in progress context for sidebar
-                    if (allCorrect && exerciseId) {
-                        markExerciseComplete(exerciseId, location.pathname);
+                    // Progress is deferred - will be submitted when exam ends
+                    if (allCorrect) {
                         setIsCompleted(true);
                     }
                 }
@@ -297,7 +299,7 @@ export const ImageLabeling: React.FC<ImageLabelingProps> = ({ image, slots, word
                 lastMarkedCorrectRef.current = null;
             }
         }
-    }, [shouldHideControls, allSlotsFilled, submitted, slots, slotValues, markExamComplete, exerciseId, markExerciseComplete, location.pathname]);
+    }, [shouldHideControls, allSlotsFilled, submitted, slots, slotValues, markExamComplete]);
 
     return (
         <div className="my-6 p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 relative">

@@ -54,7 +54,7 @@ export const SpeakingChallenge: React.FC<SpeakingChallengeProps> = ({ children, 
     );
 
     // Exam context integration
-    const { markComplete: markExamComplete } = useExamExercise(exerciseId);
+    const { markComplete: markExamComplete, shouldDeferProgress } = useExamExercise(exerciseId);
 
     useEffect(() => {
         setIsCompleted(isExerciseComplete(exerciseId));
@@ -63,11 +63,14 @@ export const SpeakingChallenge: React.FC<SpeakingChallengeProps> = ({ children, 
     // Check completion
     useEffect(() => {
         if (status === 'correct' && exerciseId) {
-            markExerciseComplete(exerciseId, location.pathname);
+            // Only mark progress immediately if NOT in exam mode
+            if (!shouldDeferProgress) {
+                markExerciseComplete(exerciseId, location.pathname);
+            }
             markExamComplete(true); // Report to exam context
             setIsCompleted(true);
         }
-    }, [status, markExerciseComplete, markExamComplete, location.pathname, exerciseId]);
+    }, [status, markExerciseComplete, markExamComplete, location.pathname, exerciseId, shouldDeferProgress]);
 
     // Split text into words, keeping punctuation attached to words for display but handling it in matching
     const words = text.split(/\s+/);

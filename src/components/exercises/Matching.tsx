@@ -127,7 +127,7 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
     }, [exerciseId, isExerciseComplete]);
 
     // Exam context integration
-    const { markComplete: markExamComplete, shouldHideControls } = useExamExercise(exerciseId);
+    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress } = useExamExercise(exerciseId);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -232,14 +232,17 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
     useEffect(() => {
         if (submitted && exerciseIdRef.current) {
             if (allCorrect) {
-                markExerciseComplete(exerciseIdRef.current, location.pathname);
+                // Only mark progress immediately if NOT in exam mode
+                if (!shouldDeferProgress) {
+                    markExerciseComplete(exerciseIdRef.current, location.pathname);
+                }
                 markExamComplete(true);
                 setIsCompleted(true);
             } else {
                 markExamComplete(false);
             }
         }
-    }, [submitted, allCorrect, markExerciseComplete, markExamComplete, location.pathname]);
+    }, [submitted, allCorrect, markExerciseComplete, markExamComplete, location.pathname, shouldDeferProgress]);
 
     // In exam mode, auto-mark as completed when all pairs matched and update when correctness changes
     const lastMarkedCorrectRef = React.useRef<boolean | null>(null);
@@ -250,9 +253,8 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
                 if (lastMarkedCorrectRef.current !== allCorrect) {
                     lastMarkedCorrectRef.current = allCorrect;
                     markExamComplete(allCorrect);
-                    // Also mark in progress context for sidebar
-                    if (allCorrect && exerciseIdRef.current) {
-                        markExerciseComplete(exerciseIdRef.current, location.pathname);
+                    // Progress is deferred - will be submitted when exam ends
+                    if (allCorrect) {
                         setIsCompleted(true);
                     }
                 }
@@ -261,7 +263,7 @@ export const Matching: React.FC<MatchingProps> = ({ pairs, direction = 'right' }
                 lastMarkedCorrectRef.current = null;
             }
         }
-    }, [shouldHideControls, submitted, matches, pairs.length, allCorrect, markExamComplete, markExerciseComplete, location.pathname]);
+    }, [shouldHideControls, submitted, matches, pairs.length, allCorrect, markExamComplete]);
 
     // Filter out matched items for the main view
     const visibleDraggables = draggableItems.filter(item => !Object.values(matches).includes(item.id));

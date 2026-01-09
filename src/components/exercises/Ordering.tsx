@@ -113,7 +113,7 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
     }, [exerciseId, isExerciseComplete]);
 
     // Exam context integration
-    const { markComplete: markExamComplete, shouldHideControls } = useExamExercise(exerciseId);
+    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress } = useExamExercise(exerciseId);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -213,14 +213,17 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
     useEffect(() => {
         if (submitted && exerciseIdRef.current) {
             if (isCorrectOrder) {
-                markExerciseComplete(exerciseIdRef.current, location.pathname);
+                // Only mark progress immediately if NOT in exam mode
+                if (!shouldDeferProgress) {
+                    markExerciseComplete(exerciseIdRef.current, location.pathname);
+                }
                 markExamComplete(true);
                 setIsCompleted(true);
             } else {
                 markExamComplete(false);
             }
         }
-    }, [submitted, isCorrectOrder, markExerciseComplete, markExamComplete, location.pathname]);
+    }, [submitted, isCorrectOrder, markExerciseComplete, markExamComplete, location.pathname, shouldDeferProgress]);
 
     // In exam mode, auto-mark as completed when user has arranged items and update when correctness changes
     const lastMarkedCorrectRef = React.useRef<boolean | null>(null);
@@ -237,9 +240,8 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
                 if (lastMarkedCorrectRef.current !== isCorrectOrder) {
                     lastMarkedCorrectRef.current = isCorrectOrder;
                     markExamComplete(isCorrectOrder);
-                    // Also mark in progress context for sidebar
-                    if (isCorrectOrder && exerciseIdRef.current) {
-                        markExerciseComplete(exerciseIdRef.current, location.pathname);
+                    // Progress is deferred - will be submitted when exam ends
+                    if (isCorrectOrder) {
                         setIsCompleted(true);
                     }
                 }
@@ -248,7 +250,7 @@ export const Ordering: React.FC<OrderingProps> = ({ items: correctOrder, options
                 lastMarkedCorrectRef.current = null;
             }
         }
-    }, [shouldHideControls, submitted, items, answerItems, correctOrder.length, isCorrectOrder, direction, markExamComplete, markExerciseComplete, location.pathname]);
+    }, [shouldHideControls, submitted, items, answerItems, correctOrder.length, isCorrectOrder, direction, markExamComplete]);
 
     return (
         <div className="my-6 p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 relative">

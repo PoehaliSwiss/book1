@@ -53,7 +53,7 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
     }, [exerciseId, isExerciseComplete]);
 
     // Exam context integration - use useMemo result for immediate registration
-    const { markComplete: markExamComplete, shouldHideControls } = useExamExercise(exerciseId);
+    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress } = useExamExercise(exerciseId);
 
     const correctAnswers = answer.split(',').map(s => s.trim());
     const isCorrect = submitted &&
@@ -84,9 +84,8 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
             if (lastMarkedCorrectRef.current !== isCorrectNow) {
                 lastMarkedCorrectRef.current = isCorrectNow;
                 markExamComplete(isCorrectNow);
-                // Also mark in progress context for sidebar
-                if (isCorrectNow && exerciseIdRef.current) {
-                    markExerciseComplete(exerciseIdRef.current, location.pathname);
+                // Progress is deferred - will be submitted when exam ends
+                if (isCorrectNow) {
                     setIsCompleted(true);
                 }
             }
@@ -105,7 +104,10 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
             selected.every(s => correctAnswers.includes(s));
 
         if (isCorrect && exerciseIdRef.current) {
-            markExerciseComplete(exerciseIdRef.current, location.pathname);
+            // Only mark progress immediately if NOT in exam mode
+            if (!shouldDeferProgress) {
+                markExerciseComplete(exerciseIdRef.current, location.pathname);
+            }
             markExamComplete(true); // Report to exam context
             setIsCompleted(true);
         } else {

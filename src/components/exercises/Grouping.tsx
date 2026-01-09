@@ -125,7 +125,7 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
     }, [exerciseId, isExerciseComplete]);
 
     // Exam context integration
-    const { markComplete: markExamComplete, shouldHideControls } = useExamExercise(exerciseId);
+    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress } = useExamExercise(exerciseId);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -220,14 +220,17 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
     useEffect(() => {
         if (submitted && exerciseIdRef.current) {
             if (isAllCorrect) {
-                markExerciseComplete(exerciseIdRef.current, location.pathname);
+                // Only mark progress immediately if NOT in exam mode
+                if (!shouldDeferProgress) {
+                    markExerciseComplete(exerciseIdRef.current, location.pathname);
+                }
                 markExamComplete(true);
                 setIsCompleted(true);
             } else {
                 markExamComplete(false);
             }
         }
-    }, [submitted, isAllCorrect, markExerciseComplete, markExamComplete, location.pathname]);
+    }, [submitted, isAllCorrect, markExerciseComplete, markExamComplete, location.pathname, shouldDeferProgress]);
 
     // In exam mode, auto-mark as completed when all items placed and update when correctness changes
     const lastMarkedCorrectRef = React.useRef<boolean | null>(null);
@@ -238,9 +241,8 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
                 if (lastMarkedCorrectRef.current !== isAllCorrect) {
                     lastMarkedCorrectRef.current = isAllCorrect;
                     markExamComplete(isAllCorrect);
-                    // Also mark in progress context for sidebar
-                    if (isAllCorrect && exerciseIdRef.current) {
-                        markExerciseComplete(exerciseIdRef.current, location.pathname);
+                    // Progress is deferred - will be submitted when exam ends
+                    if (isAllCorrect) {
                         setIsCompleted(true);
                     }
                 }
@@ -249,7 +251,7 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
                 lastMarkedCorrectRef.current = null;
             }
         }
-    }, [shouldHideControls, submitted, unplacedItems.length, isAllCorrect, markExamComplete, markExerciseComplete, location.pathname]);
+    }, [shouldHideControls, submitted, unplacedItems.length, isAllCorrect, markExamComplete]);
 
     return (
         <div className="my-6 p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 relative">

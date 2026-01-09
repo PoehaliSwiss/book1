@@ -4,6 +4,7 @@ import { saveExamAttempt, getExamAttempts, formatDuration, formatTimestamp, type
 import { useLocation } from 'react-router-dom';
 import { Clock, Play, RotateCcw, CheckCircle, AlertCircle, History, Trophy } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useProgress } from '../../context/ProgressContext';
 
 interface ExamProps {
     timeLimit: number; // in seconds
@@ -386,6 +387,8 @@ function ExamContent({ title, children }: { title?: string; children: React.Reac
 // Main Exam component
 export function Exam({ timeLimit, title, children }: ExamProps) {
     const examId = useExamId(title);
+    const location = useLocation();
+    const { markExerciseComplete } = useProgress();
     const [showResults, setShowResults] = useState(false);
     const [currentAttempt, setCurrentAttempt] = useState<{
         total: number;
@@ -401,6 +404,11 @@ export function Exam({ timeLimit, title, children }: ExamProps) {
     useEffect(() => {
         setPreviousAttempts(getExamAttempts(examId));
     }, [examId]);
+
+    // Callback to submit exercise progress when exam ends
+    const handleExerciseComplete = useCallback((exerciseId: string) => {
+        markExerciseComplete(exerciseId, location.pathname);
+    }, [markExerciseComplete, location.pathname]);
 
     const handleComplete = useCallback((
         _results: Map<string, { completed: boolean; correct: boolean }>,
@@ -465,7 +473,7 @@ export function Exam({ timeLimit, title, children }: ExamProps) {
     }
 
     return (
-        <ExamProvider timeLimit={timeLimit} onComplete={handleComplete}>
+        <ExamProvider timeLimit={timeLimit} onComplete={handleComplete} onExerciseComplete={handleExerciseComplete}>
             <ExamAutoStart>
                 <ExamTimer />
                 <ExamContent title={title}>
