@@ -24,10 +24,28 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
     const [isCompleted, setIsCompleted] = useState(false);
 
     // Generate stable exercise ID using useMemo for immediate availability
-    const exerciseId = useMemo(() =>
-        generateStableExerciseId(location.pathname, 'Quiz', answer),
-        [location.pathname, answer]
-    );
+    // Include question text (first text child) along with answer to avoid collisions
+    const exerciseId = useMemo(() => {
+        // Extract question text from children for unique ID
+        const extractText = (node: ReactNode): string => {
+            if (typeof node === 'string') return node;
+            if (typeof node === 'number') return String(node);
+            if (React.isValidElement(node)) {
+                const props = node.props as { children?: ReactNode };
+                // Skip Option components
+                if (node.type === Option ||
+                    (node.type as { displayName?: string }).displayName === 'Option') {
+                    return '';
+                }
+                if (props.children) {
+                    return React.Children.toArray(props.children).map(extractText).join('');
+                }
+            }
+            return '';
+        };
+        const questionText = React.Children.toArray(children).map(extractText).join('').slice(0, 100);
+        return generateStableExerciseId(location.pathname, 'Quiz', `${answer}:${questionText}`);
+    }, [location.pathname, answer, children]);
 
     useEffect(() => {
         exerciseIdRef.current = exerciseId;

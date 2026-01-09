@@ -39,11 +39,17 @@ export const MDXViewer: React.FC<MDXViewerProps> = ({ content, className }) => {
         const compileMdx = async () => {
             try {
                 // Preprocess: Remove empty lines within exercise blocks (same logic as Editor)
-                const cleanBlock = (text: string, tagName: string) => {
+                // For Exam, preserve empty lines to maintain paragraph structure
+                const cleanBlock = (text: string, tagName: string, preserveEmptyLines = false) => {
                     const regex = new RegExp(`(<${tagName}\\b[^>]*>)([\\s\\S]*?)(<\\/\\s*${tagName}\\s*>)`, 'gi');
                     return text.replace(regex, (_match, openTag, subcontent, closeTag) => {
                         const hasTableSeparator = /^\s*\|[\s\-:|]+\|\s*$/m.test(subcontent);
                         if (hasTableSeparator) {
+                            const cleanedContent = subcontent.split('\n').map((l: string) => l.trim()).join('\n');
+                            return `${openTag}\n${cleanedContent}\n${closeTag}`;
+                        }
+                        if (preserveEmptyLines) {
+                            // Only trim whitespace, keep empty lines for paragraph structure
                             const cleanedContent = subcontent.split('\n').map((l: string) => l.trim()).join('\n');
                             return `${openTag}\n${cleanedContent}\n${closeTag}`;
                         }
@@ -52,15 +58,22 @@ export const MDXViewer: React.FC<MDXViewerProps> = ({ content, className }) => {
                     });
                 };
 
+
                 let processedMdx = content;
-                const componentTypes = [
+                // Components that strip empty lines for cleaner MDX parsing
+                const componentTypesNoEmptyLines = [
                     'Quiz', 'Ordering', 'Matching', 'FillBlanks', 'Grouping',
                     'Media', 'InlineBlanks', 'Dialogue', 'InteractiveMedia',
-                    'AudioPhrase', 'SpeakingChallenge', 'Flashcards', 'ImageLabeling', 'Exam' ,'Math'
+                    'AudioPhrase', 'SpeakingChallenge', 'Flashcards', 'ImageLabeling', 'Math'
                 ];
+                // Components that preserve empty lines for paragraph structure
+                const componentTypesPreserveEmptyLines = ['Exam'];
 
-                componentTypes.forEach(type => {
-                    processedMdx = cleanBlock(processedMdx, type);
+                componentTypesNoEmptyLines.forEach(type => {
+                    processedMdx = cleanBlock(processedMdx, type, false);
+                });
+                componentTypesPreserveEmptyLines.forEach(type => {
+                    processedMdx = cleanBlock(processedMdx, type, true);
                 });
 
                 const { default: Content } = await evaluate(processedMdx, {
