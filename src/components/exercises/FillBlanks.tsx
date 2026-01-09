@@ -131,7 +131,7 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
         const childrenText = getTextFromChildren(children);
         return generateStableExerciseId(location.pathname, 'FillBlanks', childrenText);
     }, [children, location.pathname]);
-    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress } = useExamExercise(examExerciseId);
+    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress, shouldShowResults } = useExamExercise(examExerciseId);
 
     // Pre-process children: extract text and dedent for table detection
     const { rawText, isTable } = useMemo(() => {
@@ -378,6 +378,13 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
             return droppedId && getItemText(droppedId) === ans;
         });
 
+    // Show results when exam ends (if showResults is enabled)
+    useEffect(() => {
+        if (shouldShowResults && !submitted) {
+            setSubmitted(true);
+        }
+    }, [shouldShowResults, submitted, setSubmitted]);
+
     // Check completion after submit and report to exam (normal mode)
     useEffect(() => {
         if (submitted && exerciseIdRef.current) {
@@ -596,7 +603,7 @@ export const FillBlanks: React.FC<FillBlanksProps> = ({ children, mode = 'input'
 
     return (
         <div className="my-6 relative">
-            {isCompleted && (
+            {isCompleted && !shouldDeferProgress && (
                 <div className="absolute -top-3 -right-3 bg-green-500 text-white rounded-full p-2 shadow-lg z-10">
                     <Check size={20} />
                 </div>

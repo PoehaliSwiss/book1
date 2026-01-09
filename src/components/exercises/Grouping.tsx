@@ -125,7 +125,7 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
     }, [exerciseId, isExerciseComplete]);
 
     // Exam context integration
-    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress } = useExamExercise(exerciseId);
+    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress, shouldShowResults } = useExamExercise(exerciseId);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -216,6 +216,13 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
         return groups[groupId].includes(item.text);
     });
 
+    // Show results when exam ends (if showResults is enabled)
+    React.useEffect(() => {
+        if (shouldShowResults && !submitted) {
+            setSubmitted(true);
+        }
+    }, [shouldShowResults, submitted]);
+
     // Check completion after submit (normal mode)
     useEffect(() => {
         if (submitted && exerciseIdRef.current) {
@@ -255,7 +262,7 @@ export const Grouping: React.FC<GroupingProps> = ({ groups }) => {
 
     return (
         <div className="my-6 p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 relative">
-            {isCompleted && (
+            {isCompleted && !shouldDeferProgress && (
                 <div className="absolute -top-3 -right-3 bg-green-500 text-white rounded-full p-2 shadow-lg z-10">
                     <Check size={20} />
                 </div>

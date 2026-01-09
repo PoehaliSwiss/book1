@@ -9,6 +9,7 @@ import { useProgress } from '../../context/ProgressContext';
 interface ExamProps {
     timeLimit: number; // in seconds
     title?: string;
+    showExerciseResults?: boolean; // Show correct/incorrect on exercises after exam ends (default true)
     children: React.ReactNode;
 }
 
@@ -385,7 +386,7 @@ function ExamContent({ title, children }: { title?: string; children: React.Reac
 }
 
 // Main Exam component
-export function Exam({ timeLimit, title, children }: ExamProps) {
+export function Exam({ timeLimit, title, showExerciseResults = true, children }: ExamProps) {
     const examId = useExamId(title);
     const location = useLocation();
     const { markExerciseComplete } = useProgress();
@@ -473,7 +474,7 @@ export function Exam({ timeLimit, title, children }: ExamProps) {
     }
 
     return (
-        <ExamProvider timeLimit={timeLimit} onComplete={handleComplete} onExerciseComplete={handleExerciseComplete}>
+        <ExamProvider timeLimit={timeLimit} showResults={showExerciseResults} onComplete={handleComplete} onExerciseComplete={handleExerciseComplete}>
             <ExamAutoStart>
                 <ExamTimer />
                 <ExamContent title={title}>

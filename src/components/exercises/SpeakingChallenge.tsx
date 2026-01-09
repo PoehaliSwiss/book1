@@ -256,7 +256,7 @@ export const SpeakingChallenge: React.FC<SpeakingChallengeProps> = ({ children, 
                 status === 'incorrect' ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800" :
                     "bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700 relative"
         )}>
-            {isCompleted && (
+            {isCompleted && !shouldDeferProgress && (
                 <div className="absolute -top-3 -right-3 bg-green-500 text-white rounded-full p-2 shadow-lg z-10">
                     <Check size={20} />
                 </div>

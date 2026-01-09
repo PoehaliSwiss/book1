@@ -53,7 +53,7 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
     }, [exerciseId, isExerciseComplete]);
 
     // Exam context integration - use useMemo result for immediate registration
-    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress } = useExamExercise(exerciseId);
+    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress, shouldShowResults } = useExamExercise(exerciseId);
 
     const correctAnswers = answer.split(',').map(s => s.trim());
     const isCorrect = submitted &&
@@ -64,6 +64,13 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
 
     // Track last marked correctness to prevent infinite loops
     const lastMarkedCorrectRef = React.useRef<boolean | null>(null);
+
+    // Show results when exam ends (if showResults is enabled)
+    useEffect(() => {
+        if (shouldShowResults && !submitted) {
+            setSubmitted(true);
+        }
+    }, [shouldShowResults, submitted]);
 
     const handleSelect = (index: number) => {
         if (submitted) return;
@@ -148,7 +155,7 @@ export const Quiz: React.FC<QuizProps> = ({ answer, children, multiple = false, 
 
     return (
         <div className="my-6 p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 relative">
-            {isCompleted && (
+            {isCompleted && !shouldDeferProgress && (
                 <div className="absolute -top-3 -right-3 bg-green-500 text-white rounded-full p-2 shadow-lg z-10">
                     <Check size={20} />
                 </div>

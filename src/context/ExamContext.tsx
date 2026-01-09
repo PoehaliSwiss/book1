@@ -13,6 +13,8 @@ export interface ExamContextType {
     isExamActive: boolean;
     isTimeUp: boolean;
     isPaused: boolean;
+    isExamFinished: boolean; // True after exam ends (time up or manually finished)
+    shouldShowResults: boolean; // Whether to show correct/incorrect after exam
     remainingTime: number; // in seconds
     totalTime: number; // in seconds
 
@@ -40,14 +42,16 @@ const ExamContext = createContext<ExamContextType | null>(null);
 interface ExamProviderProps {
     children: ReactNode;
     timeLimit: number; // in seconds
+    showResults?: boolean; // Whether to show results after exam (default true)
     onComplete?: (results: ExamContextType['results'], stats: { total: number; completed: number; correct: number }) => void;
     onExerciseComplete?: (exerciseId: string) => void; // Called for each correct exercise when exam ends
 }
 
-export function ExamProvider({ children, timeLimit, onComplete, onExerciseComplete }: ExamProviderProps) {
+export function ExamProvider({ children, timeLimit, showResults = true, onComplete, onExerciseComplete }: ExamProviderProps) {
     const [isExamActive, setIsExamActive] = useState(false);
     const [isTimeUp, setIsTimeUp] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
+    const [isExamFinished, setIsExamFinished] = useState(false);
     const [remainingTime, setRemainingTime] = useState(timeLimit);
     const [results, setResults] = useState<Map<string, ExerciseResult>>(new Map());
 
@@ -97,6 +101,9 @@ export function ExamProvider({ children, timeLimit, onComplete, onExerciseComple
                     }
                 });
             }
+
+            // Mark exam as finished
+            setIsExamFinished(true);
 
             onComplete?.(results, {
                 total: totalExercises,
@@ -164,6 +171,7 @@ export function ExamProvider({ children, timeLimit, onComplete, onExerciseComple
         setIsExamActive(false);
         setIsTimeUp(false);
         setIsPaused(false);
+        setIsExamFinished(false);
         setRemainingTime(timeLimit);
         setResults(new Map());
         registeredExercises.current.clear();
@@ -180,6 +188,8 @@ export function ExamProvider({ children, timeLimit, onComplete, onExerciseComple
                 isExamActive,
                 isTimeUp,
                 isPaused,
+                isExamFinished,
+                shouldShowResults: showResults && isExamFinished,
                 remainingTime,
                 totalTime: timeLimit,
                 registerExercise,

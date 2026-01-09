@@ -275,7 +275,7 @@ export const InlineBlanks: React.FC<InlineBlanksProps> = ({ children, mode = 'ty
 
     return (
         <div className="relative">
-            {isCompleted && (
+            {isCompleted && !shouldDeferProgress && (
                 <div className="absolute -top-3 -right-3 bg-green-500 text-white rounded-full p-2 shadow-lg z-10">
                     <Check size={20} />
                 </div>

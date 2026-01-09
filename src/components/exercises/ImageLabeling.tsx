@@ -214,7 +214,7 @@ export const ImageLabeling: React.FC<ImageLabelingProps> = ({ image, slots, word
     );
 
     // Exam context integration
-    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress } = useExamExercise(exerciseId);
+    const { markComplete: markExamComplete, shouldHideControls, shouldDeferProgress, shouldShowResults } = useExamExercise(exerciseId);
 
     useEffect(() => {
         setIsCompleted(isExerciseComplete(exerciseId));
@@ -279,6 +279,13 @@ export const ImageLabeling: React.FC<ImageLabelingProps> = ({ image, slots, word
     const allSlotsFilled = slots.every(slot => slotValues[slot.id]);
     const isCorrect = submitted && slots.every(slot => slotValues[slot.id] === slot.answer);
 
+    // Show results when exam ends (if showResults is enabled)
+    useEffect(() => {
+        if (shouldShowResults && !submitted) {
+            setSubmitted(true);
+        }
+    }, [shouldShowResults, submitted]);
+
     // In exam mode, auto-mark complete when all slots are filled and update when correctness changes
     const lastMarkedCorrectRef = useRef<boolean | null>(null);
     useEffect(() => {
@@ -303,7 +310,7 @@ export const ImageLabeling: React.FC<ImageLabelingProps> = ({ image, slots, word
 
     return (
         <div className="my-6 p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 relative">
-            {isCompleted && (
+            {isCompleted && !shouldDeferProgress && (
                 <div className="absolute -top-3 -right-3 bg-green-500 text-white rounded-full p-2 shadow-lg z-10">
                     <Check size={20} />
                 </div>
