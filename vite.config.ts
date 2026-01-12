@@ -16,7 +16,17 @@ function getRepoName() {
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const repoName = getRepoName();
-  console.log('Building for repo:', repoName, 'Mode:', mode);
+  const isReaderMode = process.env.VITE_APP_MODE === 'reader';
+  console.log('Building for repo:', repoName, 'Mode:', mode, 'Reader:', isReaderMode);
+
+  // Only include sandbox in designer mode (not reader mode for GitHub Pages)
+  const inputs: Record<string, string> = {
+    main: resolve(__dirname, 'index.html'),
+  };
+
+  if (!isReaderMode) {
+    inputs.sandbox = resolve(__dirname, 'sandbox.html');
+  }
 
   return {
     base: mode === 'production' && repoName ? `/${repoName}/` : './',
@@ -25,10 +35,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       rollupOptions: {
-        input: {
-          main: resolve(__dirname, 'index.html'),
-          sandbox: resolve(__dirname, 'sandbox.html'),
-        },
+        input: inputs,
       },
     },
     plugins: [
@@ -47,4 +54,3 @@ export default defineConfig(({ mode }) => {
     }
   };
 })
-
