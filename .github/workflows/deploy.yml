@@ -25,7 +25,11 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Build
-        run: npm run build
+        run: |
+          npx tsc --project tsconfig.reader.json --noEmit
+          npx vite build
+          node scripts/generate-sitemap.js
+          node scripts/prerender.js
         env:
           VITE_APP_MODE: reader
           # Add any other necessary env vars here
