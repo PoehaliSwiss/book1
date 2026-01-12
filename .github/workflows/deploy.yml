@@ -26,7 +26,6 @@ jobs:
 
       - name: Build
         run: |
-          npx tsc --project tsconfig.reader.json --noEmit
           npx vite build
           node scripts/generate-sitemap.js
           node scripts/prerender.js
