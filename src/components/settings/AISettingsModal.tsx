@@ -12,9 +12,10 @@ interface AIConfig {
 interface AISettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
+    demoMode?: boolean;
 }
 
-export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
+export function AISettingsModal({ isOpen, onClose, demoMode = false }: AISettingsModalProps) {
     const [config, setConfig] = useState<AIConfig>({
         provider: 'openai',
         apiKey: '',
@@ -150,7 +151,26 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
                 </div>
 
                 <div className="p-6 space-y-4">
-                    {loading ? (
+                    {demoMode ? (
+                        <div className="text-center py-6">
+                            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Cpu size={32} className="text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                AI Not Available in Demo Mode
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                                Storing AI API tokens on the client side is not secure.
+                                To use AI features, please create a free account.
+                            </p>
+                            <a
+                                href="/Register"
+                                className="inline-block px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+                            >
+                                Sign Up Free
+                            </a>
+                        </div>
+                    ) : loading ? (
                         <div className="text-center py-8">Loading settings...</div>
                     ) : (
                         <>
@@ -253,16 +273,18 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
                         onClick={onClose}
                         className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     >
-                        Cancel
+                        {demoMode ? 'Close' : 'Cancel'}
                     </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2"
-                    >
-                        {saving ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save size={16} />}
-                        Save Changes
-                    </button>
+                    {!demoMode && (
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            {saving ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save size={16} />}
+                            Save Changes
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

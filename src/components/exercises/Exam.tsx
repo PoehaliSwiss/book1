@@ -316,7 +316,7 @@ function ExamStartScreen({ title, timeLimit, previousAttempts, onStart }: ExamSt
 }
 
 // Main Exam wrapper content
-function ExamContent({ title, children }: { title?: string; children: React.ReactNode }) {
+function ExamContent({ title, children, onCloseResults }: { title?: string; children: React.ReactNode; onCloseResults: () => void }) {
     const exam = useExam();
     const [showConfirm, setShowConfirm] = useState(false);
 
@@ -341,7 +341,7 @@ function ExamContent({ title, children }: { title?: string; children: React.Reac
     return (
         <div className={clsx(
             "relative",
-            isTimeUp && "pointer-events-none opacity-60"
+            isTimeUp && "pointer-events-none" // Keep content readable but prevent editing
         )}>
             {isExamActive && (
                 <div className="mb-4 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -379,6 +379,17 @@ function ExamContent({ title, children }: { title?: string; children: React.Reac
                             Finish Exam
                         </button>
                     )}
+                </div>
+            )}
+            {/* Show Close button when viewing results (exam finished) */}
+            {isTimeUp && (
+                <div className="mt-8 text-center pointer-events-auto">
+                    <button
+                        onClick={onCloseResults}
+                        className="px-8 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-medium transition-colors shadow-md"
+                    >
+                        Close
+                    </button>
                 </div>
             )}
         </div>
@@ -444,6 +455,7 @@ export function Exam({ timeLimit, title, showExerciseResults = true, children }:
     }, []);
 
     const handleContinue = useCallback(() => {
+        // Close modal but keep exercises visible with results
         setShowResults(false);
     }, []);
 
@@ -458,8 +470,14 @@ export function Exam({ timeLimit, title, showExerciseResults = true, children }:
     }, []);
 
     const handleClose = useCallback(() => {
+        // Close modal and keep exercises visible with results (same as Continue)
         setShowResults(false);
+    }, []);
+
+    // Close results view and go back to start screen
+    const handleCloseResults = useCallback(() => {
         setIsStarted(false);
+        setCurrentAttempt(null);
     }, []);
 
     if (!isStarted) {
@@ -477,7 +495,7 @@ export function Exam({ timeLimit, title, showExerciseResults = true, children }:
         <ExamProvider timeLimit={timeLimit} showResults={showExerciseResults} onComplete={handleComplete} onExerciseComplete={handleExerciseComplete}>
             <ExamAutoStart>
                 <ExamTimer />
-                <ExamContent title={title}>
+                <ExamContent title={title} onCloseResults={handleCloseResults}>
                     {children}
                 </ExamContent>
                 {currentAttempt && (

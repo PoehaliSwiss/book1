@@ -4,6 +4,7 @@ import mdx from '@mdx-js/rollup'
 import remarkGfm from 'remark-gfm';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
+import { resolve } from 'path';
 
 function getRepoName() {
   if (process.env.GITHUB_REPOSITORY) {
@@ -22,6 +23,14 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.VITE_APP_MODE': JSON.stringify(process.env.VITE_APP_MODE || 'designer')
     },
+    build: {
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'index.html'),
+          sandbox: resolve(__dirname, 'sandbox.html'),
+        },
+      },
+    },
     plugins: [
       mdx({
         remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
@@ -38,3 +47,4 @@ export default defineConfig(({ mode }) => {
     }
   };
 })
+
