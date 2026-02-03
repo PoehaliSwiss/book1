@@ -20,3 +20,5 @@ structure:
             path: /a1/chapter-1/math
           - title: Goethe exam
             path: /a1/chapter-1/goethe-exam
+          - title: BB
+            path: /a1/chapter-1/bb
