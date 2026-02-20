@@ -56,6 +56,12 @@
     </url>
     
     <url>
+        <loc>https://akkem.study/a1/chapter-1/nachhaltigkeit</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <url>
         <loc>https://akkem.study/</loc>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
