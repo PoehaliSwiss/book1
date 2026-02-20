@@ -22,3 +22,5 @@ structure:
             path: /a1/chapter-1/goethe-exam
           - title: BB
             path: /a1/chapter-1/bb
+          - title: Nachhaltigkeit
+            path: /a1/chapter-1/nachhaltigkeit
