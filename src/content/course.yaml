@@ -24,3 +24,5 @@ structure:
             path: /a1/chapter-1/bb
           - title: Nachhaltigkeit
             path: /a1/chapter-1/nachhaltigkeit
+  - title: Leetcode
+    path: /leetcode
